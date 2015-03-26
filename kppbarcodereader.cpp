@@ -59,7 +59,7 @@ void KPPBarcodeReader::ImageAvaible(QImage img)
 
     emit BarcodesFound(tags);
 
-    if((m_decodeType==KPPBarcodeReader::DecodeType::Continuous)){
+    if((m_decodeType==KPPBarcodeReader::Continuous)){
         timer_getImage->start();
     }
 }

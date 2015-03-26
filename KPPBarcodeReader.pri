@@ -37,6 +37,6 @@ else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../ExternalLibs/OpenCV/
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../QZXing/source/release/ -lQZXing2
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../QZXing/source/debug/ -lQZXing2
-else:unix: LIBS += -L$$PWD/../QZXing/source/ -lQZXing2
+else:unix: LIBS += -L/usr/lib/ -lQZXing
 
 #include(../../QZXing/source/QZXing.pri)

@@ -9,11 +9,9 @@ TARGET = KPPBarcodeReader
 
 
 SOURCES += $$PWD/kppbarcodereader.cpp \
-    $$PWD/cameracapture.cpp \
     $$PWD/visionprocessing.cpp
 
 HEADERS += $$PWD/kppbarcodereader.h \
-    $$PWD/cameracapture.h \
     $$PWD/visionprocessing.h
 
 win32{
@@ -24,8 +22,7 @@ INCLUDEPATH +=$$PWD/../QZXing/source/
 
 }
 
-unix {
-    INCLUDEPATH +=/usr/include/qzxing/
+unix {    
     target.path = /usr/lib
     INSTALLS += target
 }

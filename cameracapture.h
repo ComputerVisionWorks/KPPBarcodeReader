@@ -7,7 +7,7 @@
 #include <QCameraInfo>
 #include <QList>
 
-Q_DECLARE_METATYPE(QCameraInfo)
+
 
 class CameraCapture : public QObject
 {
@@ -15,14 +15,11 @@ class CameraCapture : public QObject
 public:
     explicit CameraCapture(QObject *parent = 0);
     ~CameraCapture();
-    void setCamera(QCameraInfo *cameraInfo=0);
-    void setCamera(int Index=0);
 
-    QCamera *SelectedCamera() const;
+
+
 
 public slots:
-    void startCamera();
-    void stopCamera();
 
 
     void CaptureImage();
@@ -38,16 +35,14 @@ public slots:
 
 
 private :
-    //QList<QCameraInfo*> m_Cameras;
-    bool isCapturingImage;
-    QCamera *m_SelectedCamera;
-    QCameraInfo *m_cameraInfo;
-    QCameraImageCapture *m_ImageCapture;
+
+
 
 signals:
     void ImageAvaible(const QImage &img);
 
-public slots:
+private slots:
+
 };
 
 #endif // CAMERACAPTURE_H

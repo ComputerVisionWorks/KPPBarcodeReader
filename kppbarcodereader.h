@@ -2,7 +2,6 @@
 #define KPPBARCODEREADER_H
 
 #include <QObject>
-#include "cameracapture.h"
 #include "visionprocessing.h"
 #include <QTimer>
 #include <QZXing.h>

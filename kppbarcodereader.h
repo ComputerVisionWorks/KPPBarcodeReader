@@ -8,7 +8,7 @@
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
 #include <QCameraInfo>
-
+#include <QCameraImageCapture>
 
 Q_DECLARE_METATYPE(QCameraInfo)
 

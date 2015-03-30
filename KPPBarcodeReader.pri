@@ -26,12 +26,6 @@ INCLUDEPATH +=$$PWD/../QZXing/source/
 unix {    
     target.path = /usr/lib
     INSTALLS += target
-    INCLUDEPATH +=/usr/include/QZXing
-    INCLUDEPATH +=/usr/include/   
-
-    header_files.files = $$HEADERS
-    header_files.path = /usr/include/KPPBarcodeReader
-    INSTALLS += header_files
 
 }
 

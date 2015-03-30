@@ -116,8 +116,9 @@ void KPPBarcodeReader::setCamera(QCameraInfo *cameraInfo)
     m_SelectedCamera = new QCamera(*cameraInfo);
 
 
+    //m_CameraCapture->su
     m_CameraCapture = new QCameraImageCapture(m_SelectedCamera);
-
+    m_CameraCapture->setBufferFormat(QVideoFrame::Format_RGB32);
 
     //updateCameraState(m_SelectedCamera->state());
 

@@ -13,3 +13,5 @@ TEMPLATE = lib
 
 include(KPPBarcodeReader.pri);
 
+MOC_DIR = mocs
+OBJECTS_DIR = objs

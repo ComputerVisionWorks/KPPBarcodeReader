@@ -1,5 +1,7 @@
 #include "visionprocessing.h"
 #include <QDebug>
+#include "QPainter"
+
 
 VisionProcessing::VisionProcessing(QObject *parent) : QObject(parent)
 {
@@ -23,12 +25,13 @@ static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
     return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 }
 
-QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *decoder)
+QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *decoder,QGraphicsPixmapItem* pixmap)
 {
      QList<QString> m_list;
 
     // asd
-    cv::Mat ProcessingImage=QImageToCvMat(original,false);
+
+    cv::Mat ProcessingImage=QImageToCvMat(original,true);
 
     Mat roiImagegray;
     cvtColor(ProcessingImage,roiImagegray,CV_BGR2GRAY);
@@ -59,7 +62,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
              {
                  Scalar color = Scalar( 255, 0, 0);
                 drawContours( ProcessingImage, contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
-
+                //ProcessingImage.adjustROI()
                 Rect boundRect=boundingRect(approx);
                 //if(boundRect)
                 Rect boundRect2(CvPoint(boundRect.x,boundRect.y),CvSize(boundRect.width-boundRect.width*0.3,boundRect.height));
@@ -70,10 +73,13 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
                 rectangle( ProcessingImage, boundRect2.tl(), boundRect2.br(), color2, 2, 8, 0 );
 
                 if(decoder!=0){
-                    QString tag= decoder->decodeImage(cvMat2QImage(roiimg),-1, -1, false);
+                    QImage roiQimg=cvMat2QImage(roiimg);
+
+                    QString tag= decoder->decodeImage(roiQimg,-1, -1, false);
                     if(tag!=""){
 
-                       CvPoint txtpt(boundRect.tl());
+                        //cvMat2QImage()
+                      /* CvPoint txtpt(boundRect.tl());
 
                        if(txtpt.y<20)
                            txtpt.y=boundRect.height+20;
@@ -82,8 +88,14 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
 
                         putText(ProcessingImage, tag.toStdString(),txtpt,
                             FONT_HERSHEY_COMPLEX_SMALL, 2, cvScalar(0,255,0), 2, CV_AA);
+                            */
+
                         m_list.append(tag);
                         emit BarCodeFound(tag);
+
+
+
+
                     }
                 }
 
@@ -128,6 +140,15 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
                  }
              }
          }
+
+     if(pixmap!=0){
+         pixmap->setPixmap(QPixmap::fromImage(cvMat2QImage(ProcessingImage)));
+
+
+
+
+
+     }
 
 
 //    std::vector<Mat> channels;

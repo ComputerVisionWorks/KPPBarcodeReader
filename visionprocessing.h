@@ -5,6 +5,7 @@
 #include "opencv2/opencv.hpp"
 #include <QImage>
 #include "QZXing.h"
+#include "QGraphicsPixmapItem"
 
 using namespace cv;
 
@@ -14,7 +15,7 @@ class VisionProcessing : public QObject
 public:
     explicit VisionProcessing(QObject *parent = 0);
     ~VisionProcessing();
-    QList<QString> getBarcodeFromImage(QImage original, QZXing *decoder=0);
+    QList<QString> getBarcodeFromImage(QImage original, QZXing *decoder=0, QGraphicsPixmapItem *pixmap=0);
     static QImage cvMat2QImage(cv::Mat mat_img);
     static Mat QImageToCvMat( const QImage &inImage, bool inCloneImageData=false);
 private:

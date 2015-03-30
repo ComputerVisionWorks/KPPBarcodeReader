@@ -84,12 +84,13 @@ void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
 
 void KPPBarcodeReader::ImageAvaible(int, QImage img)
 {
-    if(m_CapturedPixmap!=0){
-        m_CapturedPixmap->setPixmap(QPixmap::fromImage(img));
-        m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
-    }
 
-     QList<QString> tags=m_visionprocessing->getBarcodeFromImage(img,decoder);
+
+     QList<QString> tags=m_visionprocessing->getBarcodeFromImage(img,decoder,m_CapturedPixmap);
+
+
+
+         m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
 
 
    // emit BarcodesFound(tags);
@@ -116,13 +117,11 @@ void KPPBarcodeReader::setCamera(QCameraInfo *cameraInfo)
     m_SelectedCamera = new QCamera(*cameraInfo);
 
 
-    //m_CameraCapture->su
-    m_CameraCapture = new QCameraImageCapture(m_SelectedCamera);
-    m_CameraCapture->setBufferFormat(QVideoFrame::Format_RGB32);
+     m_CameraCapture = new QCameraImageCapture(m_SelectedCamera);
 
-    //updateCameraState(m_SelectedCamera->state());
 
-    //connect(m_ImageCapture, SIGNAL(readyForCaptureChanged(bool)), this, SLOT(readyForCapture(bool)));
+
+
     connect(m_CameraCapture, SIGNAL(imageCaptured(int,QImage)), this, SLOT(ImageAvaible(int,QImage)));
 
     //connect(m_ImageCapture, SIGNAL(error(int,QCameraImageCapture::Error,QString)), this,

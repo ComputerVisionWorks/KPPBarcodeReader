@@ -25,6 +25,7 @@ INCLUDEPATH +=$$PWD/../QZXing/source/
 unix {    
     target.path = /usr/lib
     INSTALLS += target
+    INCLUDEPATH +=/usr/include
 }
 
 

@@ -10,7 +10,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 {
     timer_getImage= new QTimer(this);
     timer_getImage->setSingleShot(true);
-    timer_getImage->setInterval(50);
+    timer_getImage->setInterval(20);
     connect(timer_getImage, SIGNAL(timeout()),this, SLOT(CaptureTimer()));
     timer_getImage->start();
     m_visionprocessing = new VisionProcessing(this);
@@ -38,7 +38,8 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 KPPBarcodeReader::~KPPBarcodeReader()
 {
     timer_getImage->stop();
-    m_SelectedCamera->stop();
+    if(m_SelectedCamera!=0)
+        m_SelectedCamera->stop();
     delete m_CameraCapture;
     delete m_SelectedCamera;
     delete decoder;
@@ -151,7 +152,7 @@ void KPPBarcodeReader::setCamera(int Index)
 void KPPBarcodeReader::CaptureTimer()
 {
 
-    if(m_captureEnabled==true){
+    if(m_captureEnabled==true && m_CameraCapture->isReadyForCapture()){
         m_CameraCapture->capture();
     }
     if(decodeType()!=OneShot)

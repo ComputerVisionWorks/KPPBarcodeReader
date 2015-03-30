@@ -27,7 +27,8 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
 {
      QList<QString> m_list;
 
-    cv::Mat ProcessingImage=QImageToCvMat(original,false);
+    // asd
+    cv::Mat ProcessingImage=QImageToCvMat(original,true);
 
     Mat roiImagegray;
     cvtColor(ProcessingImage,roiImagegray,CV_BGR2GRAY);

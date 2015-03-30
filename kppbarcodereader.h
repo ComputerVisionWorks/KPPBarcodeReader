@@ -4,7 +4,7 @@
 #include <QObject>
 #include "visionprocessing.h"
 #include <QTimer>
-#include <QZXing.h>
+#include "QZXing.h"
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
 #include <QCameraInfo>

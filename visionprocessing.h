@@ -4,7 +4,7 @@
 #include <QObject>
 #include "opencv2/opencv.hpp"
 #include <QImage>
-#include <QZXing.h>
+#include "QZXing.h"
 
 using namespace cv;
 

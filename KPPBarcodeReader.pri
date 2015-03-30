@@ -20,12 +20,19 @@ INCLUDEPATH += $$PWD
 INCLUDEPATH +=$$PWD/../ExternalLibs/OpenCV/include
 INCLUDEPATH +=$$PWD/../QZXing/source/
 
+
 }
 
 unix {    
     target.path = /usr/lib
     INSTALLS += target
-    INCLUDEPATH +=/usr/include
+    INCLUDEPATH +=/usr/include/QZXing
+    INCLUDEPATH +=/usr/include/   
+
+    header_files.files = $$HEADERS
+    header_files.path = /usr/include/KPPBarcodeReader
+    INSTALLS += header_files
+
 }
 
 

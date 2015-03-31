@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += widgets multimedia
+QT       += widgets multimedia multimediawidgets
 
 QT       -= gui
 

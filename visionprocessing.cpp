@@ -31,7 +31,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
 
     // asd
 
-    cv::Mat ProcessingImage=QImageToCvMat(original,true);
+    cv::Mat ProcessingImage=QImageToCvMat(original,false,false);
 
     Mat roiImagegray;
     cvtColor(ProcessingImage,roiImagegray,CV_BGR2GRAY);
@@ -79,7 +79,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
                     if(tag!=""){
 
                         //cvMat2QImage()
-                      /* CvPoint txtpt(boundRect.tl());
+                       CvPoint txtpt(boundRect.tl());
 
                        if(txtpt.y<20)
                            txtpt.y=boundRect.height+20;
@@ -88,7 +88,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
 
                         putText(ProcessingImage, tag.toStdString(),txtpt,
                             FONT_HERSHEY_COMPLEX_SMALL, 2, cvScalar(0,255,0), 2, CV_AA);
-                            */
+
 
                         m_list.append(tag);
                         emit BarCodeFound(tag);
@@ -169,7 +169,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
 
 }
 
-cv::Mat VisionProcessing::QImageToCvMat( const QImage &inImage, bool inCloneImageData)
+cv::Mat VisionProcessing::QImageToCvMat( const QImage &inImage, bool inCloneImageData,bool swap)
    {
       switch ( inImage.format() )
       {
@@ -187,7 +187,11 @@ cv::Mat VisionProcessing::QImageToCvMat( const QImage &inImage, bool inCloneImag
             if ( !inCloneImageData )
                qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning since we use a temporary QImage";
 
-            QImage   swapped = inImage.rgbSwapped();
+            QImage   swapped;
+            if(swap)
+                swapped= inImage.rgbSwapped();
+            else
+                swapped=inImage;
 
             return cv::Mat( swapped.height(), swapped.width(), CV_8UC3, const_cast<uchar*>(swapped.bits()), swapped.bytesPerLine() ).clone();
          }

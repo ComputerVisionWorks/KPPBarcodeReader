@@ -1,5 +1,5 @@
 #include "kppbarcodereader.h"
-#include "QCameraViewfinder"
+
 
 
 
@@ -121,7 +121,7 @@ void KPPBarcodeReader::setCamera(QCameraInfo *cameraInfo)
 
 
 
-    //connect(m_CameraCapture, SIGNAL(imageCaptured(int,QImage)), this, SLOT(ImageAvaible(int,QImage)));
+    connect(m_CameraCapture, SIGNAL(imageCaptured(int,QImage)), this, SLOT(ImageAvaible(int,QImage)));
 
     //connect(m_ImageCapture, SIGNAL(error(int,QCameraImageCapture::Error,QString)), this,
           //  SLOT(displayCaptureError(int,QCameraImageCapture::Error,QString)));
@@ -133,6 +133,7 @@ void KPPBarcodeReader::setCamera(QCameraInfo *cameraInfo)
         m_SelectedCamera->setCaptureMode(captureMode);
 
     m_SelectedCamera->start();
+
 
 }
 

@@ -17,7 +17,7 @@ public:
     ~VisionProcessing();
     QList<QString> getBarcodeFromImage(QImage original, QZXing *decoder=0, QGraphicsPixmapItem *pixmap=0);
     static QImage cvMat2QImage(cv::Mat mat_img);
-    static Mat QImageToCvMat( const QImage &inImage, bool inCloneImageData=false);
+    static Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData=false, bool swap=false);
 private:
     //cv::Mat m_PrePorcessedImage;
 

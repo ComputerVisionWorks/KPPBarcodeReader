@@ -10,9 +10,9 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 {
     timer_getImage= new QTimer(this);
     timer_getImage->setSingleShot(true);
-    timer_getImage->setInterval(20);
+    timer_getImage->setInterval(50);
     connect(timer_getImage, SIGNAL(timeout()),this, SLOT(CaptureTimer()));
-    timer_getImage->start();
+    //timer_getImage->start();
     m_visionprocessing = new VisionProcessing(this);
 
     decoder= new QZXing(this);
@@ -98,7 +98,7 @@ void KPPBarcodeReader::ImageAvaible(int, QImage img)
 
 
 
-         m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
+       //  m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
 
 
    // emit BarcodesFound(tags);

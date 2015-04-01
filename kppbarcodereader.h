@@ -49,7 +49,7 @@ private:
     QGraphicsView *m_viewer;
     QCamera *m_SelectedCamera;
     QCameraInfo *m_cameraInfo;
-
+    VideoCapture* cvcamera;
     bool m_captureEnabled;
     QCameraImageCapture *m_CameraCapture;
     QGraphicsScene* scene_processed;

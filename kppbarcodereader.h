@@ -1,22 +1,22 @@
 #ifndef KPPBARCODEREADER_H
 #define KPPBARCODEREADER_H
 
+#include <kppbarcodereader_global.h>
+
 #include <QObject>
-#include "visionprocessing.h"
 #include <QTimer>
-#include "QZXing/QZXing.h"
+#include "visionprocessing.h"
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
-#include <QCameraInfo>
-#include <QCameraImageCapture>
 
-Q_DECLARE_METATYPE(QCameraInfo)
 
-class KPPBarcodeReader:public QObject
+
+class KPPBARCODEREADER_EXPORT KPPBarcodeReader:public QObject
 {
     Q_OBJECT
 
     Q_ENUMS(DecodeType)
+
 public:
     enum DecodeType {
         OneShot=0,
@@ -36,9 +36,9 @@ public:
     void EnableDecoding();
     DecodeType decodeType() const;
     void setDecodeType(const DecodeType &decodeType);
-    void setCamera(QCameraInfo *cameraInfo=0);
+
     void setCamera(int Index=-1);
-    QCamera *SelectedCamera() const;
+
 
     bool captureEnabled() const;
 
@@ -47,11 +47,12 @@ public:
 private:
     bool isCapturingImage;
     QGraphicsView *m_viewer;
-    QCamera *m_SelectedCamera;
-    QCameraInfo *m_cameraInfo;
+
+
     VideoCapture* cvcamera;
+
     bool m_captureEnabled;
-    QCameraImageCapture *m_CameraCapture;
+
     QGraphicsScene* scene_processed;
 
     QTimer *timer_getImage;
@@ -62,10 +63,10 @@ private:
     QGraphicsPixmapItem *m_CapturedPixmap;
 
 public slots:
-
+    void Capture();
 private slots:
-    void ImageAvaible(int, QImage);
-    void CaptureTimer();
+
+
 
 signals:
     void BarcodesFound(QList<QString>);

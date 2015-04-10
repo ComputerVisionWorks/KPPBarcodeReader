@@ -25,20 +25,20 @@ static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
     return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 }
 
-QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *decoder,QGraphicsPixmapItem* pixmap)
+QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decoder,QGraphicsPixmapItem* pixmap)
 {
      QList<QString> m_list;
 
     // asd
 
-    cv::Mat ProcessingImage=QImageToCvMat(original,false,false);
 
     Mat roiImagegray;
-    cvtColor(ProcessingImage,roiImagegray,CV_BGR2GRAY);
+
+    cvtColor(original,roiImagegray,CV_BGR2GRAY);
 
     Mat roiImageThreshed;
-    threshold(roiImagegray,roiImageThreshed,150,255,cv::THRESH_BINARY);
-
+    threshold(roiImagegray,roiImageThreshed,100,255,cv::THRESH_BINARY);
+    //pixmap->setPixmap(QPixmap::fromImage(cvMat2QImage(roiImageThreshed)));
     std::vector<std::vector<cv::Point> > contours;
      cv::findContours(roiImageThreshed, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
@@ -51,7 +51,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
 
              // Skip small or non-convex objects
-             if (std::fabs(cv::contourArea(contours[i])) < 12000 ||std::fabs(cv::contourArea(contours[i])) > 60000 || !cv::isContourConvex(approx))
+             if (std::fabs(cv::contourArea(contours[i])) < 5000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
                  continue;
 
              if (approx.size() == 3)
@@ -61,16 +61,22 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
              else if (approx.size() >= 4 && approx.size() <= 8)
              {
                  Scalar color = Scalar( 255, 0, 0);
-                drawContours( ProcessingImage, contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
+                drawContours( original, contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
                 //ProcessingImage.adjustROI()
                 Rect boundRect=boundingRect(approx);
-                //if(boundRect)
-                Rect boundRect2(CvPoint(boundRect.x,boundRect.y),CvSize(boundRect.width-boundRect.width*0.3,boundRect.height));
-                Mat roiimg=ProcessingImage(boundRect2);
+                //qDebug()<<"X:"<<boundRect.x;
+                //qDebug()<<"Y:"<<boundRect.y;
+                if(boundRect.y-5<0) continue;
+
+
+
+
+                Rect boundRect2(CvPoint(boundRect.x,boundRect.y-5),CvSize(boundRect.width-boundRect.width*0.25,boundRect.height+5));
+                Mat roiimg=original(boundRect2);
 
                 Scalar color2 = Scalar( 0, 0, 255);
 
-                rectangle( ProcessingImage, boundRect2.tl(), boundRect2.br(), color2, 2, 8, 0 );
+                rectangle( original, boundRect2.tl(), boundRect2.br(), color2, 2, 8, 0 );
 
                 if(decoder!=0){
                     QImage roiQimg=cvMat2QImage(roiimg);
@@ -86,7 +92,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
                         else
                            txtpt.y=boundRect.y-20;
 
-                        putText(ProcessingImage, tag.toStdString(),txtpt,
+                        putText(original, tag.toStdString(),txtpt,
                             FONT_HERSHEY_COMPLEX_SMALL, 2, cvScalar(0,255,0), 2, CV_AA);
 
 
@@ -142,7 +148,8 @@ QList<QString> VisionProcessing::getBarcodeFromImage(QImage original, QZXing *de
          }
 
      if(pixmap!=0){
-         pixmap->setPixmap(QPixmap::fromImage(cvMat2QImage(ProcessingImage)));
+         cvtColor(original,original,CV_BGR2RGB);
+         pixmap->setPixmap(QPixmap::fromImage(cvMat2QImage(original)));
 
 
 
@@ -223,7 +230,7 @@ QImage VisionProcessing::cvMat2QImage(cv::Mat mat_img)
     // 8-bit, 4 channel
             case CV_8UC4:
             {
-               QImage image( mat_img.data, mat_img.cols, mat_img.rows, mat_img.step, QImage::Format_RGB32 );
+               QImage image( mat_img.data, mat_img.cols, mat_img.rows, mat_img.step, QImage::Format_RGB32);
 
                return image;
             }

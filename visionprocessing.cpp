@@ -51,7 +51,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
 
              // Skip small or non-convex objects
-             if (std::fabs(cv::contourArea(contours[i])) < 8000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
+             if (std::fabs(cv::contourArea(contours[i])) <5000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
                  continue;
 
              if (approx.size() == 3)

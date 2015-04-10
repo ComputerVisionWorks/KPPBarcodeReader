@@ -31,11 +31,11 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
         m_viewer->setScene(scene_processed);
     }
 
-//    VideoCapture cap(0); // open the default camera
-//        if(cap.isOpened()){  // check if we succeeded
-//            Mat frame;
-//             cap >> frame; // get a new frame from camera
-//        }
+    //    VideoCapture cap(0); // open the default camera
+    //        if(cap.isOpened()){  // check if we succeeded
+    //            Mat frame;
+    //             cap >> frame; // get a new frame from camera
+    //        }
 
 
 
@@ -44,7 +44,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
 KPPBarcodeReader::~KPPBarcodeReader()
 {
-    timer_getImage->stop();      
+    timer_getImage->stop();
     delete cvcamera;
     delete decoder;
     delete m_visionprocessing;
@@ -85,12 +85,15 @@ void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
 void KPPBarcodeReader::setCamera(int Index)
 {
 
-      delete cvcamera;
+    delete cvcamera;
 
-      cvcamera= new VideoCapture(Index);
-      cvcamera->set(CV_CAP_PROP_FRAME_WIDTH,800);
-      cvcamera->set(CV_CAP_PROP_FRAME_HEIGHT,600);
-      cvcamera->set(CV_CAP_PROP_FPS,15);
+    cvcamera= new VideoCapture(Index);
+
+    if(cvcamera->isOpened()){
+        cvcamera->set(CV_CAP_PROP_FRAME_WIDTH,800);
+        cvcamera->set(CV_CAP_PROP_FRAME_HEIGHT,600);
+        cvcamera->set(CV_CAP_PROP_FPS,15);
+    }
 
 }
 
@@ -99,17 +102,24 @@ void KPPBarcodeReader::setCamera(int Index)
 
 void KPPBarcodeReader::Capture()
 {
-
+    try
+    {
+        if(!cvcamera->isOpened()) return;
 
         Mat frame;
         cvcamera->read(frame); // get a new frame from camera
         m_visionprocessing->getBarcodeFromImage(frame,decoder,m_CapturedPixmap);
-     //   m_CapturedPixmap->setPixmap(QPixmap::fromImage(m_visionprocessing->cvMat2QImage(frame)));
-       m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
+        //   m_CapturedPixmap->setPixmap(QPixmap::fromImage(m_visionprocessing->cvMat2QImage(frame)));
+        m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
 
-    if(decodeType()!=OneShot)
-        timer_getImage->start();
-
+        if(decodeType()!=OneShot)
+            timer_getImage->start();
+    }
+    catch( cv::Exception& e )
+    {
+        const char* err_msg = e.what();
+        std::cout << "exception caught: " << err_msg << std::endl;
+    }
 }
 
 
@@ -150,8 +160,8 @@ QList<QString> KPPBarcodeReader::AvaibleCameras()
     QList<QString> cameras;
 
     //for(int i=0;i<QCameraInfo::availableCameras().count();i++){
-  //      cameras.append(QCameraInfo::availableCameras().at(i).description());
-  //  }
+    //      cameras.append(QCameraInfo::availableCameras().at(i).description());
+    //  }
 
     return cameras;
 

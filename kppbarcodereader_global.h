@@ -3,8 +3,7 @@
 
 
 
-#include <QtCore/qglobal.h>
-#include "QZXing.h"
+
 
 #if defined(KPPBARCODEREADER_LIBRARY)
 #  define KPPBARCODEREADER_EXPORT Q_DECL_EXPORT

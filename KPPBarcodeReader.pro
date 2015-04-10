@@ -10,7 +10,7 @@ TARGET = KPPBarcodeReader
 TEMPLATE = lib
 CONFIG += plugin
 DEFINES = KPPBARCODEREADER_LIBRARY
-include(KPPBarcodeReader.pri);
+
 
 MOC_DIR = mocs
 OBJECTS_DIR = objs
@@ -18,7 +18,10 @@ OBJECTS_DIR = objs
 unix {
     target.path = /usr/lib
     INSTALLS += target
+
 }
+
+include(KPPBarcodeReader.pri)
 
 
 SOURCES += $$PWD/kppbarcodereader.cpp \
@@ -27,8 +30,3 @@ SOURCES += $$PWD/kppbarcodereader.cpp \
 HEADERS += $$PWD/kppbarcodereader.h \
     $$PWD/visionprocessing.h \
     kppbarcodereader_global.h
-
-unix: LIBS += -lQZXing
-
-INCLUDEPATH += $$PWD/../QZXing/source
-DEPENDPATH += $$PWD/../QZXing/source

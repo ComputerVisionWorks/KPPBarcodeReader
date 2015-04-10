@@ -2,6 +2,8 @@
 #define KPPBARCODEREADER_H
 
 #include <kppbarcodereader_global.h>
+#include <QtCore/qglobal.h>
+#include "QZXing.h"
 
 #include <QObject>
 #include <QTimer>

@@ -51,7 +51,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
 
              // Skip small or non-convex objects
-             if (std::fabs(cv::contourArea(contours[i])) < 5000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
+             if (std::fabs(cv::contourArea(contours[i])) < 8000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
                  continue;
 
              if (approx.size() == 3)
@@ -66,12 +66,12 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
                 Rect boundRect=boundingRect(approx);
                 //qDebug()<<"X:"<<boundRect.x;
                 //qDebug()<<"Y:"<<boundRect.y;
-                if(boundRect.y-5<0) continue;
+                //if(boundRect.y-5<0 || boundRect.y+boundRect.height+10>original.size().height ) continue;
 
 
 
 
-                Rect boundRect2(CvPoint(boundRect.x,boundRect.y-5),CvSize(boundRect.width-boundRect.width*0.25,boundRect.height+5));
+                Rect boundRect2(CvPoint(boundRect.x,boundRect.y),CvSize(boundRect.width-boundRect.width*0.3,boundRect.height-7));
                 Mat roiimg=original(boundRect2);
 
                 Scalar color2 = Scalar( 0, 0, 255);

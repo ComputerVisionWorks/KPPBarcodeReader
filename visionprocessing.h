@@ -24,7 +24,7 @@ private:
 
 signals:
     //void ImagePreProcessed(QImage img);
-    void BarCodeFound(QString);
+    void BarCodesFound(QList<QString>);
 public slots:
 };
 

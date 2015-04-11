@@ -31,11 +31,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
         m_viewer->setScene(scene_processed);
     }
 
-    //    VideoCapture cap(0); // open the default camera
-    //        if(cap.isOpened()){  // check if we succeeded
-    //            Mat frame;
-    //             cap >> frame; // get a new frame from camera
-    //        }
+    cvcamera= new VideoCapture(-1);
 
 
 
@@ -85,31 +81,53 @@ void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
 void KPPBarcodeReader::setCamera(int Index)
 {
 
-    delete cvcamera;
+    if(cvcamera->isOpened()){
+        cvcamera->release();
+    }
 
-    cvcamera= new VideoCapture(Index);
+    cvcamera->open(Index);
+
 
     if(cvcamera->isOpened()){
-        cvcamera->set(CV_CAP_PROP_FRAME_WIDTH,800);
-        cvcamera->set(CV_CAP_PROP_FRAME_HEIGHT,600);
+        cvcamera->set(CV_CAP_PROP_FRAME_WIDTH,320);
+        cvcamera->set(CV_CAP_PROP_FRAME_HEIGHT,240);
         cvcamera->set(CV_CAP_PROP_FPS,15);
     }
 
 }
 
+void KPPBarcodeReader::CloseCamera()
+{
+    StopCapture();
+    cvcamera->release();
+}
+
+void KPPBarcodeReader::StopCapture()
+{
+ timer_getImage->stop();
+}
 
 
 
-void KPPBarcodeReader::Capture()
+
+void KPPBarcodeReader::Capture(int frames)
 {
     try
     {
         if(!cvcamera->isOpened()) return;
 
         Mat frame;
-        cvcamera->read(frame); // get a new frame from camera
-        m_visionprocessing->getBarcodeFromImage(frame,decoder,m_CapturedPixmap);
-        //   m_CapturedPixmap->setPixmap(QPixmap::fromImage(m_visionprocessing->cvMat2QImage(frame)));
+        int i;
+        for(i=0;i<frames;i++){
+           bool ret= cvcamera->read(frame); // get a new frame from camera
+           if(ret==false){
+               cvcamera->release();
+               return;
+           }
+        }
+        QList<QString> barcodes=m_visionprocessing->getBarcodeFromImage(frame,decoder,m_CapturedPixmap);
+        if(barcodes.count()>0)
+            emit BarcodesFound(barcodes);
         m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
 
         if(decodeType()!=OneShot)

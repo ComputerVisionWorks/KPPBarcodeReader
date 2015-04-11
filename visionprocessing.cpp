@@ -51,14 +51,14 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
 
              // Skip small or non-convex objects
-             if (std::fabs(cv::contourArea(contours[i])) <5000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
+             if (std::fabs(cv::contourArea(contours[i])) <4000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
                  continue;
 
              if (approx.size() == 3)
              {
                  //setLabel(dst, "TRI", contours[i]);    // Triangles
              }
-             else if (approx.size() >= 4 && approx.size() <= 8)
+             else if (approx.size() >= 4 && approx.size() <= 16)
              {
                  Scalar color = Scalar( 255, 0, 0);
                 drawContours( original, contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
@@ -97,7 +97,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
 
 
                         m_list.append(tag);
-                        emit BarCodeFound(tag);
+                        //emit BarCodeFound(tag);
 
 
 

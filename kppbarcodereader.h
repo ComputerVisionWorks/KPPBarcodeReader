@@ -40,8 +40,9 @@ public:
     void setDecodeType(const DecodeType &decodeType);
 
     void setCamera(int Index=-1);
+    void CloseCamera();
 
-
+    void StopCapture();
     bool captureEnabled() const;
 
     void setCaptureEnabled(bool captureEnabled);
@@ -65,7 +66,7 @@ private:
     QGraphicsPixmapItem *m_CapturedPixmap;
 
 public slots:
-    void Capture();
+    void Capture(int frames=1);
 private slots:
 
 

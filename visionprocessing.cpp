@@ -7,7 +7,8 @@
 
 VisionProcessing::VisionProcessing(QObject *parent) : QObject(parent)
 {
-    m_thresh=70;
+    m_thresh=180;
+    m_thresh_inner=180;
 }
 
 VisionProcessing::~VisionProcessing()

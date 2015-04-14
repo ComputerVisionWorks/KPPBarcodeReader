@@ -5,7 +5,7 @@
 
 VisionProcessing::VisionProcessing(QObject *parent) : QObject(parent)
 {
-
+    m_thresh=70;
 }
 
 VisionProcessing::~VisionProcessing()
@@ -37,7 +37,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
     cvtColor(original,roiImagegray,CV_BGR2GRAY);
 
     Mat roiImageThreshed;
-    threshold(roiImagegray,roiImageThreshed,100,255,cv::THRESH_BINARY);
+    threshold(roiImagegray,roiImageThreshed,m_thresh,255,cv::THRESH_BINARY);
     //pixmap->setPixmap(QPixmap::fromImage(cvMat2QImage(roiImageThreshed)));
     std::vector<std::vector<cv::Point> > contours;
      cv::findContours(roiImageThreshed, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
@@ -51,14 +51,14 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
 
              // Skip small or non-convex objects
-             if (std::fabs(cv::contourArea(contours[i])) <4000 ||std::fabs(cv::contourArea(contours[i])) > 50000 || !cv::isContourConvex(approx))
+             if (std::fabs(cv::contourArea(contours[i])) <200 ||std::fabs(cv::contourArea(contours[i])) > 9000000 || !cv::isContourConvex(approx))
                  continue;
 
              if (approx.size() == 3)
              {
                  //setLabel(dst, "TRI", contours[i]);    // Triangles
              }
-             else if (approx.size() >= 4 && approx.size() <= 16)
+             else if (approx.size() >= 4 && approx.size() <= 60)
              {
                  Scalar color = Scalar( 255, 0, 0);
                 drawContours( original, contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
@@ -66,12 +66,12 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
                 Rect boundRect=boundingRect(approx);
                 //qDebug()<<"X:"<<boundRect.x;
                 //qDebug()<<"Y:"<<boundRect.y;
-                //if(boundRect.y-5<0 || boundRect.y+boundRect.height+10>original.size().height ) continue;
+                if(boundRect.y-5<0 ) continue;
 
 
 
 
-                Rect boundRect2(CvPoint(boundRect.x,boundRect.y),CvSize(boundRect.width-boundRect.width*0.3,boundRect.height-7));
+                Rect boundRect2(CvPoint(boundRect.x,boundRect.y-5),CvSize(boundRect.width-boundRect.width*0.35,boundRect.height-10));
                 Mat roiimg=original(boundRect2);
 
                 Scalar color2 = Scalar( 0, 0, 255);
@@ -217,7 +217,17 @@ cv::Mat VisionProcessing::QImageToCvMat( const QImage &inImage, bool inCloneImag
       }
 
       return cv::Mat();
-   }
+}
+double VisionProcessing::thresh() const
+{
+    return m_thresh;
+}
+
+void VisionProcessing::setThresh(double thresh)
+{
+    m_thresh = thresh;
+}
+
 
 
 
@@ -226,9 +236,9 @@ QImage VisionProcessing::cvMat2QImage(cv::Mat mat_img)
 
 
     switch ( mat_img.type() )
-        {
+    {
     // 8-bit, 4 channel
-            case CV_8UC4:
+    case CV_8UC4:
             {
                QImage image( mat_img.data, mat_img.cols, mat_img.rows, mat_img.step, QImage::Format_RGB32);
 

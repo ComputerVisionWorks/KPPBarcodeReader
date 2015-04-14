@@ -19,11 +19,15 @@ public:
     QList<QString> getBarcodeFromImage(Mat original, QZXing *decoder=0, QGraphicsPixmapItem *pixmap=0);
     static QImage cvMat2QImage(cv::Mat mat_img);
     static Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData=false, bool swap=false);
+    double thresh() const;
+    void setThresh(double thresh);
+
 private:
     //cv::Mat m_PrePorcessedImage;
-
+    double m_thresh;
 signals:
     //void ImagePreProcessed(QImage img);
+
     void BarCodesFound(QList<QString>);
 public slots:
 };

@@ -11,7 +11,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
     timer_getImage= new QTimer(this);
     timer_getImage->setSingleShot(true);
-    timer_getImage->setInterval(250);
+    timer_getImage->setInterval(100);
     connect(timer_getImage, SIGNAL(timeout()),this, SLOT(Capture()));
     //timer_getImage->start();
     m_visionprocessing = new VisionProcessing(this);
@@ -81,16 +81,19 @@ void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
 void KPPBarcodeReader::setCamera(int Index)
 {
 
-    if(cvcamera->isOpened()){
-        cvcamera->release();
-    }
+    //if(cvcamera->isOpened()){
+   //     cvcamera->release();
+  //  }
 
     cvcamera->open(Index);
 
 
     if(cvcamera->isOpened()){
-        cvcamera->set(CV_CAP_PROP_FRAME_WIDTH,320);
-        cvcamera->set(CV_CAP_PROP_FRAME_HEIGHT,240);
+        cvcamera->set(CV_CAP_PROP_FRAME_WIDTH,640);
+        cvcamera->set(CV_CAP_PROP_FRAME_HEIGHT,480);
+
+
+
         cvcamera->set(CV_CAP_PROP_FPS,15);
     }
 

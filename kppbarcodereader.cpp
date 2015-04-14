@@ -140,6 +140,7 @@ void KPPBarcodeReader::Capture(int frames)
     {
         const char* err_msg = e.what();
         std::cout << "exception caught: " << err_msg << std::endl;
+        timer_getImage->start();
     }
 }
 

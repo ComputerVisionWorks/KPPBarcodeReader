@@ -3,6 +3,8 @@
 #include "QPainter"
 
 
+
+
 VisionProcessing::VisionProcessing(QObject *parent) : QObject(parent)
 {
     m_thresh=70;
@@ -49,10 +51,15 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
              // Approximate contour with accuracy proportional
              // to the contour perimeter
              cv::approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true)*0.02, true);
-
+             Rect boundRect=boundingRect(approx);
              // Skip small or non-convex objects
              double area=cv::contourArea(contours[i]);
-             if (std::fabs(area) <8000 ||std::fabs(cv::contourArea(contours[i])) > 70000)//|| !cv::isContourConvex(approx))
+             if (std::fabs(area) <20000 ||
+                 std::fabs(area)> 100000 ||
+                 boundRect.tl().x==0 || boundRect.tl().y==0 ||
+                 boundRect.br().x>=original.size().width ||
+                 boundRect.br().y>= original.size().height
+                 )//|| !cv::isContourConvex(approx))
                  continue;
 
              if (approx.size() == 3)
@@ -64,22 +71,108 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
                  Scalar color = Scalar( 255, 0, 0);
                 drawContours( original, contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
                 //ProcessingImage.adjustROI()
-                Rect boundRect=boundingRect(approx);
+
                 //qDebug()<<"X:"<<boundRect.x;
                 //qDebug()<<"Y:"<<boundRect.y;
-                if(boundRect.y+boundRect.height+50>original.size().height ||
-                        boundRect.x+boundRect.width+50>original.size().width)
-                    continue;
+
+
+
+                //Rect boundRect2(CvPoint(boundRect.x,boundRect.y),CvSize(50,50));
+
+                Mat labelroi=original(boundRect);
+                Mat labelroithresh;
+                cvtColor(labelroi,labelroithresh,CV_BGR2GRAY);
+
+
+                threshold(labelroithresh,labelroithresh,m_thresh_inner,255,cv::THRESH_BINARY_INV);
+
+             /*   Mat temp;
+                cvtColor(labelroithresh,temp,CV_GRAY2BGR);
+                temp.copyTo(labelroi);*/
+
+
+
+                std::vector<std::vector<cv::Point> > in_labelcontours;
+                cv::findContours(labelroithresh, in_labelcontours, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
+
+                 std::vector<cv::Point> barcode_approx;
+
+                for (int i = 0; i < in_labelcontours.size(); i++)
+                    {
+                        Scalar color3 = Scalar( 0, 255, 0);
+
+                        // Approximate contour with accuracy proportional
+                        // to the contour perimeter
+                        cv::approxPolyDP(cv::Mat(in_labelcontours[i]), barcode_approx, cv::arcLength(cv::Mat(in_labelcontours[i]), true)*0.02, true);
+
+                        if(barcode_approx.size()<3) continue;
+
+                        Rect boundRect_label=boundingRect(barcode_approx);
+
+
+                        // Skip small or non-convex objects
+                        int gap=50;
+                        double area=cv::contourArea(in_labelcontours[i]);
+                        if (boundRect_label.width<100 ||
+                            boundRect_label.width>250||
+                            boundRect_label.height<50 ||
+                            boundRect_label.height>160 ||
+                            std::fabs(area) <1000 ||
+                            std::fabs(area) >80000
+                                )
+                            continue;
+
+                        drawContours( labelroi, in_labelcontours, i, color3, 2, 8, std::vector<Vec4i>(),0, Point() );
+
+                        Scalar color2 = Scalar( 0, 0, 255);
+
+
+                        Rect barcode_rect(Point(boundRect.tl().x+boundRect_label.tl().x-gap,boundRect.tl().y+boundRect_label.tl().y-gap), Size(boundRect_label.width+2.3*gap,boundRect_label.height+2*gap));
+
+                        double x,y,w,h;
+                        x=barcode_rect.tl().x;
+                        y=barcode_rect.tl().y;
+                        w=barcode_rect.br().x;
+                        h=barcode_rect.br().y;
+
+                        rectangle( original, barcode_rect.tl(), barcode_rect.br(), color2, 2, 8, 0 );
+
+                        Mat barcodeimg=original(barcode_rect);
+                       // cv::imwrite("e:/temp.jpeg",barcodeimg);
+
+
+                        if(decoder!=0){
+                            QImage roiQimg=cvMat2QImage(barcodeimg);
+
+                            QString tag= decoder->decodeImage(roiQimg,-1, -1, false);
+                            if(tag!=""){
+
+                                //cvMat2QImage()
+                               CvPoint txtpt(barcode_rect.tl());
+
+                               if(txtpt.y<20)
+                                   txtpt.y=barcode_rect.height+20;
+                                else
+                                   txtpt.y=barcode_rect.y-20;
+
+                                putText(original, tag.toStdString(),txtpt,
+                                    FONT_HERSHEY_COMPLEX_SMALL, 2, cvScalar(0,255,0), 2, CV_AA);
+
+
+                                m_list.append(tag);
+                                //emit BarCodeFound(tag);
 
 
 
 
-                Rect boundRect2(CvPoint(boundRect.x,boundRect.y),CvSize(250,110));
+                            }
+                        }
+
+                }
+/*
                 Mat roiimg=original(boundRect2);
 
-                Scalar color2 = Scalar( 0, 0, 255);
 
-                rectangle( original, boundRect2.tl(), boundRect2.br(), color2, 2, 8, 0 );
 
                 if(decoder!=0){
                     QImage roiQimg=cvMat2QImage(roiimg);
@@ -146,7 +239,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
                  if (std::abs(1 - ((double)r.width / r.height)) <= 0.2 &&
                      std::abs(1 - (area / (CV_PI * std::pow(radius, 2)))) <= 0.2){
                    //  setLabel(dst, "CIR", contours[i]);
-                 }
+                 }*/
              }
          }
 
@@ -230,6 +323,16 @@ void VisionProcessing::setThresh(double thresh)
 {
     m_thresh = thresh;
 }
+double VisionProcessing::thresh_inner() const
+{
+    return m_thresh_inner;
+}
+
+void VisionProcessing::setThresh_inner(double thresh_inner)
+{
+    m_thresh_inner = thresh_inner;
+}
+
 
 
 
@@ -242,8 +345,8 @@ QImage VisionProcessing::cvMat2QImage(cv::Mat mat_img)
     {
     // 8-bit, 4 channel
     case CV_8UC4:
-            {
-               QImage image( mat_img.data, mat_img.cols, mat_img.rows, mat_img.step, QImage::Format_RGB32);
+    {
+        QImage image( mat_img.data, mat_img.cols, mat_img.rows, mat_img.step, QImage::Format_RGB32);
 
                return image;
             }

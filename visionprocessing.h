@@ -22,9 +22,13 @@ public:
     double thresh() const;
     void setThresh(double thresh);
 
+    double thresh_inner() const;
+    void setThresh_inner(double thresh_inner);
+
 private:
     //cv::Mat m_PrePorcessedImage;
     double m_thresh;
+    double m_thresh_inner;
 signals:
     //void ImagePreProcessed(QImage img);
 

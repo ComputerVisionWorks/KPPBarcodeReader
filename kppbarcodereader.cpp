@@ -133,7 +133,7 @@ void KPPBarcodeReader::Capture(int frames)
             emit BarcodesFound(barcodes);
         m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
 
-        if(decodeType()!=OneShot)
+        if(decodeType()!=OneShot && barcodes.count()==0)
             timer_getImage->start();
     }
     catch( cv::Exception& e )

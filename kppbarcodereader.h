@@ -4,14 +4,16 @@
 #include <kppbarcodereader_global.h>
 #include <QtCore/qglobal.h>
 #include "QZXing.h"
-
+#include "GPIO/GPIOManager.h"
 #include <QObject>
 #include <QTimer>
 #include "visionprocessing.h"
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
+#include "threadtrigger.h"
 
 
+using namespace GPIO;
 
 class KPPBARCODEREADER_EXPORT KPPBarcodeReader:public QObject
 {
@@ -47,13 +49,16 @@ public:
 
     void setCaptureEnabled(bool captureEnabled);
 
+    bool UseTrigger() const;
+    void setUseTrigger(bool UseTrigger);
+
 private:
     bool isCapturingImage;
     QGraphicsView *m_viewer;
-
-
+    GPIOManager* m_gpiomanager=0;
+    ThreadTrigger* m_trigger;
     VideoCapture* cvcamera;
-
+    bool m_UseTrigger;
     bool m_captureEnabled;
 
     QGraphicsScene* scene_processed;
@@ -66,7 +71,7 @@ private:
     QGraphicsPixmapItem *m_CapturedPixmap;
 
 public slots:
-    void Capture(int frames=1);
+    void Capture(int frames=4);
 private slots:
 
 

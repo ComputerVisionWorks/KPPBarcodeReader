@@ -1,7 +1,7 @@
 #include "kppbarcodereader.h"
 
 
-
+using namespace GPIO;
 
 
 
@@ -19,7 +19,10 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
     decoder= new QZXing(this);
     decoder->setDecoder( QZXing::DecoderFormat_DATA_MATRIX);
     m_decodeInterval=50;
-    m_decodeType=Continuous;
+    m_decodeType=OneShotGoodRead;
+    m_trigger=new ThreadTrigger();
+    connect(m_trigger, SIGNAL(finished()), m_trigger, SLOT(deleteLater()));
+    connect(m_trigger, SIGNAL(TriggerReceived()), this, SLOT(Capture()),Qt::DirectConnection);
 
     cvcamera=0;
     m_captureEnabled=false;
@@ -33,7 +36,13 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
     cvcamera= new VideoCapture(-1);
 
+    m_gpiomanager=GPIOManager::getInstance();
 
+    /*int pin = GPIO::GPIOConst::getInstance()->getGpioByKey("P8_8");
+
+    gp->exportPin(pin);
+    gp->setDirection(pin,GPIO::OUTPUT);
+*/
 
 }
 
@@ -75,6 +84,30 @@ void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
     else
         timer_getImage->stop();
 }
+bool KPPBarcodeReader::UseTrigger() const
+{
+    return m_UseTrigger;
+}
+
+void KPPBarcodeReader::setUseTrigger(bool UseTrigger)
+{
+    m_UseTrigger = UseTrigger;
+
+    if(m_trigger->isRunning())
+        setUseTrigger(false);
+
+    if (UseTrigger) {
+        setDecodeType(OneShotGoodRead);
+        m_trigger->start();
+
+
+    }
+    else {
+        m_trigger->requestInterruption();
+        m_trigger->wait();
+    }
+}
+
 
 
 
@@ -82,8 +115,8 @@ void KPPBarcodeReader::setCamera(int Index)
 {
 
     //if(cvcamera->isOpened()){
-   //     cvcamera->release();
-  //  }
+    //     cvcamera->release();
+    //  }
 
     cvcamera->open(Index);
 
@@ -133,7 +166,7 @@ void KPPBarcodeReader::Capture(int frames)
             emit BarcodesFound(barcodes);
         m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
 
-        if(decodeType()!=OneShot && barcodes.count()==0)
+        if(decodeType()!=OneShot || (decodeType()==OneShotGoodRead && barcodes.count()==0))
             timer_getImage->start();
     }
     catch( cv::Exception& e )

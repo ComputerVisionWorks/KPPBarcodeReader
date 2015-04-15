@@ -25,8 +25,20 @@ include(KPPBarcodeReader.pri)
 
 
 SOURCES += $$PWD/kppbarcodereader.cpp \
-    $$PWD/visionprocessing.cpp
+    $$PWD/visionprocessing.cpp \
+    threadtrigger.cpp
 
 HEADERS += $$PWD/kppbarcodereader.h \
     $$PWD/visionprocessing.h \
-    kppbarcodereader_global.h
+    kppbarcodereader_global.h \
+    threadtrigger.h
+
+unix:!macx: LIBS += -L$$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlack-GPIO/debug/ -lQBeagleBoneBlackGPIO
+
+INCLUDEPATH += $$PWD/../BeagleBoneBlack-GPIO/
+DEPENDPATH += $$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlack-GPIO/debug
+
+unix:!macx: LIBS += -L$$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlackGPIO/debug/ -lQBeagleBoneBlackGPIO
+
+INCLUDEPATH += $$PWD/../BeagleBoneBlack-GPIO/
+DEPENDPATH += $$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlackGPIO/debug

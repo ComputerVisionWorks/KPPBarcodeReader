@@ -55,8 +55,9 @@ public:
 private:
     bool isCapturingImage;
     QGraphicsView *m_viewer;
-    GPIOManager* m_gpiomanager=0;
+    GPIOManager* m_gpiomanager;
     ThreadTrigger* m_trigger;
+    int m_LedsPin;
     VideoCapture* cvcamera;
     bool m_UseTrigger;
     bool m_captureEnabled;

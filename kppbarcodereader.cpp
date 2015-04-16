@@ -11,7 +11,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
     timer_getImage= new QTimer(this);
     timer_getImage->setSingleShot(true);
-    timer_getImage->setInterval(100);
+    timer_getImage->setInterval(50);
     connect(timer_getImage, SIGNAL(timeout()),this, SLOT(Capture()));
     //timer_getImage->start();
     m_visionprocessing = new VisionProcessing(this);
@@ -38,11 +38,11 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
     m_gpiomanager=GPIOManager::getInstance();
 
-    /*int pin = GPIO::GPIOConst::getInstance()->getGpioByKey("P8_8");
+    m_LedsPin = GPIOConst::getInstance()->getGpioByKey("P8_13");
 
-    gp->exportPin(pin);
-    gp->setDirection(pin,GPIO::OUTPUT);
-*/
+    m_gpiomanager->exportPin(m_LedsPin);
+    m_gpiomanager->setDirection(m_LedsPin,GPIO::OUTPUT);
+
 
 }
 
@@ -53,6 +53,7 @@ KPPBarcodeReader::~KPPBarcodeReader()
     delete cvcamera;
     delete decoder;
     delete m_visionprocessing;
+    delete m_gpiomanager;
 }
 
 
@@ -148,10 +149,12 @@ void KPPBarcodeReader::StopCapture()
 
 void KPPBarcodeReader::Capture(int frames)
 {
+    QList<QString> barcodes;
     try
     {
         if(!cvcamera->isOpened()) return;
 
+        m_gpiomanager->setValue(m_LedsPin,GPIO::HIGH);
         Mat frame;
         int i;
         for(i=0;i<frames;i++){
@@ -161,20 +164,25 @@ void KPPBarcodeReader::Capture(int frames)
                return;
            }
         }
-        QList<QString> barcodes=m_visionprocessing->getBarcodeFromImage(frame,decoder,m_CapturedPixmap);
-        if(barcodes.count()>0)
+        barcodes=m_visionprocessing->getBarcodeFromImage(frame,decoder,m_CapturedPixmap);
+        if(barcodes.count()>0){
             emit BarcodesFound(barcodes);
+            m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
+        }
         m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
 
-        if(decodeType()!=OneShot || (decodeType()==OneShotGoodRead && barcodes.count()==0))
-            timer_getImage->start();
+
     }
     catch( cv::Exception& e )
     {
         const char* err_msg = e.what();
         std::cout << "exception caught: " << err_msg << std::endl;
-        timer_getImage->start();
+
     }
+    if(decodeType()!=OneShot && (decodeType()==OneShotGoodRead && barcodes.count()==0))
+        timer_getImage->start();
+
+   // m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
 }
 
 

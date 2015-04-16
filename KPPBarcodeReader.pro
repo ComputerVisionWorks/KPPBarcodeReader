@@ -33,12 +33,3 @@ HEADERS += $$PWD/kppbarcodereader.h \
     kppbarcodereader_global.h \
     threadtrigger.h
 
-unix:!macx: LIBS += -L$$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlack-GPIO/debug/ -lQBeagleBoneBlackGPIO
-
-INCLUDEPATH += $$PWD/../BeagleBoneBlack-GPIO/
-DEPENDPATH += $$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlack-GPIO/debug
-
-unix:!macx: LIBS += -L$$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlackGPIO/debug/ -lQBeagleBoneBlackGPIO
-
-INCLUDEPATH += $$PWD/../BeagleBoneBlack-GPIO/
-DEPENDPATH += $$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlackGPIO/debug

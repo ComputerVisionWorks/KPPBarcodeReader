@@ -4,13 +4,12 @@
 #include <kppbarcodereader_global.h>
 #include <QtCore/qglobal.h>
 #include "QZXing.h"
-#include "GPIO/GPIOManager.h"
 #include <QObject>
 #include <QTimer>
 #include "visionprocessing.h"
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
-#include "threadtrigger.h"
+#include "visionthread.h"
 
 
 using namespace GPIO;
@@ -34,45 +33,40 @@ public:
     VisionProcessing *getVisionProcessing() const;
     QList<QString> AvaibleCameras();
 
-    int decodeInterval() const;
-    void setDecodeInterval(int decodeInterval);
+
     void DisableDecoding();
     void EnableDecoding();
     DecodeType decodeType() const;
+
     void setDecodeType(const DecodeType &decodeType);
 
-    void setCamera(int Index=-1);
-    void CloseCamera();
 
-    void StopCapture();
-    bool captureEnabled() const;
 
-    void setCaptureEnabled(bool captureEnabled);
 
-    bool UseTrigger() const;
-    void setUseTrigger(bool UseTrigger);
 
 private:
     bool isCapturingImage;
     QGraphicsView *m_viewer;
-    GPIOManager* m_gpiomanager;
-    ThreadTrigger* m_trigger;
-    int m_LedsPin;
-    VideoCapture* cvcamera;
-    bool m_UseTrigger;
+
+
+
+    VisionThread* m_visionthread;
+
     bool m_captureEnabled;
 
     QGraphicsScene* scene_processed;
 
-    QTimer *timer_getImage;
+
     QZXing *decoder;
     VisionProcessing *m_visionprocessing;
+
     DecodeType m_decodeType;
-    int m_decodeInterval;
+
     QGraphicsPixmapItem *m_CapturedPixmap;
 
+    void DoWork();
 public slots:
-    void Capture(int frames=4);
+    void CaptureImageReady(const QImage &image);
 private slots:
 
 

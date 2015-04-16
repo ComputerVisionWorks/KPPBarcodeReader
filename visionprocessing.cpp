@@ -5,15 +5,26 @@
 
 
 
-VisionProcessing::VisionProcessing(QObject *parent) : QObject(parent)
+VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(parent)
 {
     m_thresh=180;
     m_thresh_inner=180;
+    cvcamera=0;
+    cvcamera= new VideoCapture(0);
+
+    m_gpiomanager=GPIOManager::getInstance();
+
+    m_LedsPin = GPIOConst::getInstance()->getGpioByKey("P8_13");
+
+    m_gpiomanager->exportPin(m_LedsPin);
+    m_gpiomanager->setDirection(m_LedsPin,GPIO::OUTPUT);
+    m_decoder=decoder;
 }
 
 VisionProcessing::~VisionProcessing()
 {
-
+    delete cvcamera;
+    delete m_gpiomanager;
 }
 /**
  * Helper function to find a cosine of angle between vectors
@@ -28,7 +39,7 @@ static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
     return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 }
 
-QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decoder,QGraphicsPixmapItem* pixmap)
+QList<QString> VisionProcessing::getBarcodeFromImage(Mat original)
 {
      QList<QString> m_list;
 
@@ -41,7 +52,7 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
 
     Mat roiImageThreshed;
     threshold(roiImagegray,roiImageThreshed,m_thresh,255,cv::THRESH_BINARY);
-    //pixmap->setPixmap(QPixmap::fromImage(cvMat2QImage(roiImageThreshed)));
+
     std::vector<std::vector<cv::Point> > contours;
      cv::findContours(roiImageThreshed, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
@@ -142,10 +153,10 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
                        // cv::imwrite("e:/temp.jpeg",barcodeimg);
 
 
-                        if(decoder!=0){
+                        if(m_decoder!=0){
                             QImage roiQimg=cvMat2QImage(barcodeimg);
 
-                            QString tag= decoder->decodeImage(roiQimg,-1, -1, false);
+                            QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);
                             if(tag!=""){
 
                                 //cvMat2QImage()
@@ -170,103 +181,14 @@ QList<QString> VisionProcessing::getBarcodeFromImage(Mat original, QZXing *decod
                         }
 
                 }
-/*
-                Mat roiimg=original(boundRect2);
 
-
-
-                if(decoder!=0){
-                    QImage roiQimg=cvMat2QImage(roiimg);
-
-                    QString tag= decoder->decodeImage(roiQimg,-1, -1, false);
-                    if(tag!=""){
-
-                        //cvMat2QImage()
-                       CvPoint txtpt(boundRect.tl());
-
-                       if(txtpt.y<20)
-                           txtpt.y=boundRect.height+20;
-                        else
-                           txtpt.y=boundRect.y-20;
-
-                        putText(original, tag.toStdString(),txtpt,
-                            FONT_HERSHEY_COMPLEX_SMALL, 2, cvScalar(0,255,0), 2, CV_AA);
-
-
-                        m_list.append(tag);
-                        //emit BarCodeFound(tag);
-
-
-
-
-                    }
-                }
-
-                 // Number of vertices of polygonal curve
-                 int vtc = approx.size();
-
-                 // Get the cosines of all corners
-                 std::vector<double> cos;
-                 for (int j = 2; j < vtc+1; j++)
-                     cos.push_back(angle(approx[j%vtc], approx[j-2], approx[j-1]));
-
-                 // Sort ascending the cosine values
-                 std::sort(cos.begin(), cos.end());
-
-                 // Get the lowest and the highest cosine
-                 double mincos = cos.front();
-                 double maxcos = cos.back();
-
-                 // Use the degrees obtained above and the number of vertices
-                 // to determine the shape of the contour
-                 if (vtc == 4 && mincos >= -0.1 && maxcos <= 0.3){
-                    // setLabel(dst, "RECT", contours[i]);
-
-                 }
-                 else if (vtc == 5 && mincos >= -0.34 && maxcos <= -0.27){
-                     //setLabel(dst, "PENTA", contours[i]);
-                 }
-                 else if (vtc == 6 && mincos >= -0.55 && maxcos <= -0.45){
-                     //setLabel(dst, "HEXA", contours[i]);
-                 }
-             }
-             else
-             {
-                 // Detect and label circles
-                 double area = cv::contourArea(contours[i]);
-                 cv::Rect r = cv::boundingRect(contours[i]);
-                 int radius = r.width / 2;
-
-                 if (std::abs(1 - ((double)r.width / r.height)) <= 0.2 &&
-                     std::abs(1 - (area / (CV_PI * std::pow(radius, 2)))) <= 0.2){
-                   //  setLabel(dst, "CIR", contours[i]);
-                 }*/
              }
          }
 
-     if(pixmap!=0){
-         cvtColor(original,original,CV_BGR2RGB);
-         pixmap->setPixmap(QPixmap::fromImage(cvMat2QImage(original)));
+    cvtColor(original,original,CV_BGR2RGB);
 
 
-
-
-
-     }
-
-
-//    std::vector<Mat> channels;
-//    channels.push_back(roiImagegray);
-//    channels.push_back(roiImagegray);
-//    channels.push_back(roiImagegray);
-
-//    merge(channels,roiImagegray);
-
-
-
-    //emit ImagePreProcessed(cvMat2QImage(roiImageThreshed));
-
-
+     emit ImageCaptured(cvMat2QImage(original));
      return m_list;
 
 
@@ -386,3 +308,78 @@ QImage VisionProcessing::cvMat2QImage(cv::Mat mat_img)
 
          return QImage();
 }
+
+
+
+
+void VisionProcessing::setCamera(int Index)
+{
+
+    //if(cvcamera->isOpened()){
+    //     cvcamera->release();
+    //  }
+
+    cvcamera->open(Index);
+
+
+    if(cvcamera->isOpened()){
+        cvcamera->set(CV_CAP_PROP_FRAME_WIDTH,640);
+        cvcamera->set(CV_CAP_PROP_FRAME_HEIGHT,480);
+
+
+
+        cvcamera->set(CV_CAP_PROP_FPS,15);
+    }
+
+}
+
+void VisionProcessing::CloseCamera()
+{
+    StopCapture();
+    cvcamera->release();
+}
+
+void VisionProcessing::StopCapture()
+{
+
+}
+
+
+
+
+void VisionProcessing::Capture(int frames)
+{
+    QList<QString> barcodes;
+    try
+    {
+        if(!cvcamera->isOpened()) return;
+
+        m_gpiomanager->setValue(m_LedsPin,GPIO::HIGH);
+        Mat frame;
+        int i;
+        for(i=0;i<frames;i++){
+           bool ret= cvcamera->read(frame); // get a new frame from camera
+           if(ret==false){
+               cvcamera->release();
+               return;
+           }
+        }
+        barcodes=getBarcodeFromImage(frame);
+        if(barcodes.count()>0){
+           // emit BarcodesFound(barcodes);
+            m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
+        }
+      //  m_viewer->fitInView(m_CapturedPixmap->boundingRect() ,Qt::KeepAspectRatio);
+
+
+    }
+    catch( cv::Exception& e )
+    {
+        const char* err_msg = e.what();
+        std::cout << "exception caught: " << err_msg << std::endl;
+
+    }
+
+   // m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
+}
+

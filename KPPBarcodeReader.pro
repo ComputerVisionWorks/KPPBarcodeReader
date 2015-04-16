@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets
+QT       += core gui widgets concurrent
 
 TARGET = KPPBarcodeReader
 TEMPLATE = lib
@@ -26,10 +26,10 @@ include(KPPBarcodeReader.pri)
 
 SOURCES += $$PWD/kppbarcodereader.cpp \
     $$PWD/visionprocessing.cpp \
-    threadtrigger.cpp
+    visionthread.cpp
 
 HEADERS += $$PWD/kppbarcodereader.h \
     $$PWD/visionprocessing.h \
     kppbarcodereader_global.h \
-    threadtrigger.h
+    visionthread.h
 

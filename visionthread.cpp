@@ -1,25 +1,30 @@
-#include "threadtrigger.h"
+#include "visionthread.h"
 #include "qdebug.h"
 
 using namespace GPIO;
 
-ThreadTrigger::ThreadTrigger()
+VisionThread::VisionThread(VisionProcessing *vision)
+{
+    m_vision=vision;
+
+}
+
+VisionThread::~VisionThread()
 {
 
 }
 
-ThreadTrigger::~ThreadTrigger()
+
+
+void VisionThread::run()
 {
 
-}
 
 
 
-void ThreadTrigger::run()
-{
-
+    qDebug()<<"Vision thread started";
+    /*
     bool pinlaststate=false;
-    qDebug()<<"Trigger thread started";
     GPIOManager* m_gpiomanager=GPIOManager::getInstance();
 
     int pin = GPIOConst::getInstance()->getGpioByKey("P8_7");
@@ -29,14 +34,25 @@ void ThreadTrigger::run()
 
    // m_gpiomanager->waitForEdge(pin,GPIO::RISING);
 
-
+*/
+    msleep(500);
 
     while (!isInterruptionRequested()){
+
+
+        m_vision->Capture(5);
+
+        msleep(10);
+    }
+
+
+/*
+
         //m_gpiomanager->waitForEdge(pin,GPIO::RISING);
         if(m_gpiomanager->getValue(pin)==1 && pinlaststate==false){
             pinlaststate=true;
             qDebug()<<"Triggered up";
-            emit TriggerReceived();
+            //emit TriggerReceived();
         }
 
         if(m_gpiomanager->getValue(pin)==0 && pinlaststate==true){
@@ -44,8 +60,8 @@ void ThreadTrigger::run()
             qDebug()<<"Triggered down";
         }
 
-    }
-
     delete m_gpiomanager;
+    */
+
 
 }

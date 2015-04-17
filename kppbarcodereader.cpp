@@ -6,7 +6,7 @@ using namespace GPIO;
 
 
 
-KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
+KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGraphicsView *viewer_pre) :
     QObject(parent)
 {
 
@@ -15,6 +15,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
     qRegisterMetaType<cv::Mat>();
 
     m_captureEnabled=false;
+
     m_CapturedPixmap=0;
     m_viewer=viewer;
     if(viewer!=0){
@@ -24,6 +25,13 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
     }
 
 
+    m_PreprocessedPixmap=0;
+    m_viewerPreProcessed=viewer_pre;
+    if(m_viewerPreProcessed!=0){
+        scene_PreProcessed = new QGraphicsScene();
+        m_PreprocessedPixmap=scene_PreProcessed->addPixmap(QPixmap());
+        m_viewerPreProcessed->setScene(scene_PreProcessed);
+    }
 
 
     decoder= new QZXing(this);
@@ -44,6 +52,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
     connect(m_visioncapture,SIGNAL(FrameReady(cv::Mat)),m_visionprocessing,SLOT(ProcessFrame(cv::Mat)));
     connect(m_visionprocessing,SIGNAL(ImageReady(QImage)),this,SLOT(CaptureImageReady(QImage)));
+    connect(m_visionprocessing,SIGNAL(PreprocessedImageReady(QImage)),this,SLOT(PreProcessedImageReady(QImage)));
 
     m_capturethread=new QThread(this);
     connect(m_capturethread, SIGNAL(finished()), m_capturethread, SLOT(deleteLater()));
@@ -102,6 +111,12 @@ void KPPBarcodeReader::CaptureImageReady(const QImage &image)
 
     m_CapturedPixmap->setPixmap(QPixmap::fromImage(image));
     m_viewer->fitInView(m_CapturedPixmap,Qt::KeepAspectRatio);
+}
+
+void KPPBarcodeReader::PreProcessedImageReady(const QImage &image)
+{
+    m_PreprocessedPixmap->setPixmap(QPixmap::fromImage(image));
+    m_viewerPreProcessed->fitInView(m_PreprocessedPixmap,Qt::KeepAspectRatio);
 }
 
 void KPPBarcodeReader::CaptureStarted()

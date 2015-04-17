@@ -29,7 +29,7 @@ public:
         Continuous=2
     };
 
-    KPPBarcodeReader(QObject *parent=0, QGraphicsView * viewer=0);
+    KPPBarcodeReader(QObject *parent=0, QGraphicsView * viewer=0,QGraphicsView * viewer_pre=0);
     ~KPPBarcodeReader();
 
     VisionProcessing *getVisionProcessing() const;
@@ -49,14 +49,18 @@ public:
 private:
     bool isCapturingImage;
     QGraphicsView *m_viewer;
+    QGraphicsScene* scene_processed;
+    QGraphicsPixmapItem *m_CapturedPixmap;
 
+    QGraphicsView *m_viewerPreProcessed;
+    QGraphicsScene* scene_PreProcessed;
+    QGraphicsPixmapItem *m_PreprocessedPixmap;
 
 
    // VisionThread* m_visionthread;
 
     bool m_captureEnabled;
 
-    QGraphicsScene* scene_processed;
 
 
     QZXing *decoder;
@@ -67,11 +71,12 @@ private:
 
     DecodeType m_decodeType;
 
-    QGraphicsPixmapItem *m_CapturedPixmap;
+
 
 
 public slots:
     void CaptureImageReady(const QImage &image);
+    void PreProcessedImageReady(const QImage &image);
 
 private slots:
     void CaptureStarted();

@@ -49,9 +49,15 @@ private:
     cv::Mat m_frame;
     void ImageFrameQueue(const cv::Mat & frame);
 
+    void RotateWithoutCrop(const double degrees, Mat &src, Mat &dst);
+
+    Point2f rotPoint(const Mat &R, const Point2f &p);
+    Mat rotateImage(const Mat &fromI, Mat *toI, const Rect &fromroi, double angle);
+    Size rotatedImageBB(const Mat &R, const Rect &bb);
 signals:
 
     void ImageReady(const QImage &);
+    void PreprocessedImageReady(const QImage &);
     void CaptureStarted ();
     void BarCodesFound(QList<QString>);
 public slots:

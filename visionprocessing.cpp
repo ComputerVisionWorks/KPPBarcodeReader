@@ -1,15 +1,16 @@
 #include "visionprocessing.h"
 #include <QDebug>
 #include "QPainter"
-
+#include "numeric"
+#include "math.h"
 
 
 using namespace cv;
 
 VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(parent)
 {
-    m_thresh=50;
-    m_thresh_inner=50;
+    m_thresh=180;
+    m_thresh_inner=180;
 
     m_processAll=false;
 
@@ -60,16 +61,16 @@ void VisionProcessing::ProcessImage(Mat original)
     Mat imagegray,image_edges,imagegray_original;
 
     cvtColor(original,imagegray,CV_BGR2GRAY);
-    int ratio = 3;
+    int ratio = 2;
     imagegray.copyTo(imagegray_original);
     /// Reduce noise with a kernel 3x3
-    // blur( imagegray, imagegray, Size(3,3) );
+    blur( imagegray, imagegray, Size(2,2) );
     int kernel_size = 3;
     Canny( imagegray, image_edges, m_thresh, m_thresh*ratio, kernel_size );
 
 
 
-     // threshold(imagegray,imagegray,m_thresh,255,cv::THRESH_BINARY);
+    // threshold(imagegray,imagegray,m_thresh,255,cv::THRESH_BINARY);
 
 
     std::vector<std::vector<cv::Point> > image_contours;
@@ -110,12 +111,73 @@ void VisionProcessing::ProcessImage(Mat original)
         {
             Scalar color = Scalar( 255, 0, 0);
             drawContours( original, image_contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
+            //label_boundrect-=Size(100,0);
+            Mat labelimage_origin=original(label_boundrect);
+            Mat labelimage;
+            labelimage_origin.copyTo(labelimage);
 
-            Mat labelimage=original(label_boundrect);
+
+            RotatedRect rotrect=minAreaRect(image_contours[i]);
+
+
+            RotateWithoutCrop(rotrect.angle,labelimage,labelimage);
+  //          cv::Mat rot = cv::getRotationMatrix2D(rotrect.center,0, 1.0);
+
+//            warpAffine(labelimage,labelimage,rot,rotrect.boundingRect().size(),INTER_CUBIC);
+
+
+
+            //RotateWithoutCrop(-rotrect.angle,labelimage,labelimage);
+
+            CvPoint txtpt2(label_boundrect.tl());
+            txtpt2.y=label_boundrect.y;
+
+            putText(original, QString::number(rotrect.angle).toStdString() ,txtpt2,
+                    FONT_HERSHEY_PLAIN, 1, cvScalar(0,255,0), 2, CV_AA);
 
 
 
 
+            if(m_decoder!=0){
+                cv::normalize(labelimage, labelimage, 0, 255, NORM_MINMAX);
+
+                QImage roiQimg=cvMat2QImage(labelimage);
+
+                const QImage image2=VisionProcessing::cvMat2QImage(labelimage);
+
+                Q_ASSERT(image2.constBits() == labelimage.data);
+                emit PreprocessedImageReady(image2);
+
+                QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);
+
+                if(tag!=""){
+
+                    //cvMat2QImage()
+                    CvPoint txtpt(label_boundrect.tl());
+
+                    txtpt.y=label_boundrect.y+label_boundrect.height+20;
+
+
+                    putText(original, tag.toStdString(),txtpt,
+                            FONT_HERSHEY_PLAIN, 1, cvScalar(0,255,0), 2, CV_AA);
+
+
+                    m_list.append(tag);
+                    break;
+                    //emit BarCodeFound(tag);
+
+
+
+
+                }
+
+            }
+
+
+
+
+
+            /*
 
             Mat barcode_edges,labelroigray;
 
@@ -155,13 +217,14 @@ void VisionProcessing::ProcessImage(Mat original)
                 //RotatedRect barcodeRect =minAreaRect(in_labelcontours[i]);
                 double area=contourArea(in_labelcontours[i]);
                 double perimeter = cv::arcLength(in_labelcontours[i],true);
+
                 if(perimeter<20) continue;
 
                 if(barcode_boundrect.height<30) continue;
                 if(barcode_boundrect.width<20) continue;
                 if(barcode_boundrect.width>300) continue;
 
-                /*                          barcode_boundrect.height<0 ||
+                                          barcode_boundrect.height<0 ||
                             barcode_boundrect.height>1000 ||
                             barcode_boundrect.width<0 ||
                             barcode_boundrect.width>1000 ||
@@ -169,29 +232,17 @@ void VisionProcessing::ProcessImage(Mat original)
                             std::fabs(area) >10000
                             )
                         continue;
-*/
+
                 drawContours( labelimage, in_labelcontours, i, color_in_label, 2, 8, std::vector<Vec4i>(),0, Point() );
 
-                //   rectangle( labelimage, barcode_boundrect.tl(), barcode_boundrect.br(), color_barcode_rect, 2, 8, 0 );
-
-
-                Rect barcode_boundrect_adjusted=Rect(label_boundrect.tl(),Size(barcode_boundrect.size().width*2.5,barcode_boundrect.size().height*2.5));
-
-                barcode_boundrect_adjusted-=barcode_boundrect.tl();
 
 
 
+                Rect barcode_boundrect_adjusted=Rect(Point(label_boundrect.x,label_boundrect.y),Size(barcode_boundrect.size().width*2.5,barcode_boundrect.size().height*2.5));
+
+                barcode_boundrect_adjusted-=Point(barcode_boundrect.x,barcode_boundrect.y);
 
 
-                /*
-                    Scalar color2 = Scalar( 0, 0, 255);
-
-
-
-                    Rect barcode_boundrect_adjusted=barcode_boundrect;//+cv::Size(barcode_boundrect.width, barcode_boundrect.height);
-                    //barcode_boundrect_adjusted.x-=barcode_boundrect.width/2;
-                    //barcode_boundrect_adjusted.y-=barcode_boundrect.height/2;
- */
 
 
                 if(barcode_boundrect_adjusted.x<=0){
@@ -215,7 +266,7 @@ void VisionProcessing::ProcessImage(Mat original)
 
 
                 Mat barcodeimg=imagegray(barcode_boundrect_adjusted);
-
+                rectangle( original, barcode_boundrect_adjusted.tl(), barcode_boundrect_adjusted.br(), color_barcode_rect, 2, 8, 0 );
 
 
 
@@ -226,7 +277,7 @@ void VisionProcessing::ProcessImage(Mat original)
                     QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);
 
                     if(tag!=""){
-                        rectangle( original, barcode_boundrect_adjusted.tl(), barcode_boundrect_adjusted.br(), color_barcode_rect, 2, 8, 0 );
+
                         //cvMat2QImage()
                         CvPoint txtpt(label_boundrect.tl());
 
@@ -251,7 +302,7 @@ void VisionProcessing::ProcessImage(Mat original)
                 }
 
 
-            }
+            }*/
 
         }
     }
@@ -423,3 +474,69 @@ cv::Mat VisionProcessing::QImageToCvMat( const QImage &inImage, bool inCloneImag
     return cv::Mat();
 }
 
+
+void VisionProcessing::RotateWithoutCrop(const double degrees,Mat &src,Mat &dst)
+{
+
+    cv::Mat frame, frameRotated;
+
+    int diagonal = (int)sqrt(src.cols * src.cols + src.rows * src.rows);
+    int newWidth = diagonal;
+    int newHeight = diagonal;
+
+    int offsetX = (newWidth - src.cols) / 2;
+    int offsetY = (newHeight - src.rows) / 2;
+    cv::Mat targetMat(newWidth, newHeight, src.type(), cv::Scalar(0));
+    cv::Point2f src_center(targetMat.cols / 2.0f, targetMat.rows / 2.0f);
+
+    src.copyTo(frame);
+
+    frame.copyTo(targetMat.rowRange(offsetY, offsetY +
+                                    frame.rows).colRange(offsetX, offsetX + frame.cols));
+    cv::Mat rot_mat = cv::getRotationMatrix2D(src_center, degrees, 1.0);
+    cv::warpAffine(targetMat, frameRotated, rot_mat, targetMat.size());
+
+    cv::Rect bound_Rect(frame.cols, frame.rows, 0, 0);
+    int x1 = offsetX;
+    int x2 = offsetX + frame.cols;
+    int x3 = offsetX;
+    int x4 = offsetX + frame.cols;
+    int y1 = offsetY;
+    int y2 = offsetY;
+    int y3 = offsetY + frame.rows;
+    int y4 = offsetY + frame.rows;
+    cv::Mat co_Ordinate = (cv::Mat_<double>(3, 4) << x1, x2, x3, x4,
+                           y1, y2, y3, y4,
+                           1,  1,  1,  1 );
+
+    cv::Mat RotCo_Ordinate = rot_mat * co_Ordinate;
+
+    for (int i = 0; i < 4; ++i) {
+        if (RotCo_Ordinate.at<double>(0, i) < bound_Rect.x)
+            bound_Rect.x = (int)RotCo_Ordinate.at<double>(0, i);
+        if (RotCo_Ordinate.at<double>(1, i) < bound_Rect.y)
+            bound_Rect.y = RotCo_Ordinate.at<double>(1, i);
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        if (RotCo_Ordinate.at<double>(0, i) > bound_Rect.width)
+            bound_Rect.width = (int)RotCo_Ordinate.at<double>(0, i);
+        if (RotCo_Ordinate.at<double>(1, i) > bound_Rect.height)
+            bound_Rect.height = RotCo_Ordinate.at<double>(1, i);
+    }
+
+    bound_Rect.width = bound_Rect.width - bound_Rect.x;
+    bound_Rect.height = bound_Rect.height - bound_Rect.y;
+
+    if (bound_Rect.x < 0)
+        bound_Rect.x = 0;
+    if (bound_Rect.y < 0)
+        bound_Rect.y = 0;
+    if (bound_Rect.width > frameRotated.cols)
+        bound_Rect.width = frameRotated.cols;
+    if (bound_Rect.height > frameRotated.rows)
+        bound_Rect.height = frameRotated.rows;
+
+    cv::Mat ROI = frameRotated(bound_Rect);
+    ROI.copyTo(dst);
+}

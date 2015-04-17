@@ -57,20 +57,23 @@ void VisionProcessing::ProcessImage(Mat original)
 
 
         Mat imagegray,image_edges;
-        Mat temporiginal;
-        original.copyTo(temporiginal);
-        cvtColor(temporiginal,imagegray,CV_BGR2GRAY);
+
+        cvtColor(original,imagegray,CV_BGR2GRAY);
         int ratio = 3;
 
-        /// Reduce noise with a kernel 3x3
+      /*  /// Reduce noise with a kernel 3x3
         blur( imagegray, imagegray, Size(3,3) );
         int kernel_size = 3;
         Canny( imagegray, image_edges, m_thresh, m_thresh*ratio, kernel_size );
 
+*/
+
+         threshold(imagegray,imagegray,m_thresh,255,cv::THRESH_BINARY);
+
 
         std::vector<std::vector<cv::Point> > image_contours;
 
-        cv::findContours(image_edges, image_contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+        cv::findContours(imagegray, image_contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
 /*
         dst = Mat::zeros(Imagegray.size().height,Imagegray.size().width,original.type());
@@ -107,29 +110,29 @@ void VisionProcessing::ProcessImage(Mat original)
                 Scalar color = Scalar( 255, 0, 0);
                 drawContours( original, image_contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
 
-
-
-
                 Mat labelimage=original(label_boundrect);
-                Mat templabeloriginal;
-                labelimage.copyTo(templabeloriginal);
+
+/*
+
+
+
                 Mat barcode_edges,labelroigray;
 
-                cvtColor(templabeloriginal,labelroigray,CV_BGR2GRAY);
+                cvtColor(labelimage,labelroigray,CV_BGR2GRAY);
 
                 /// Reduce noise with a kernel 3x3
               //  blur( labelroigray, labelroigray, Size(3,3) );
              //   int kernel_size = 3;
                 //dilate(labelroigray, labelroigray,Mat(), Point(-1, -1), 1, 1, 1);
-                Canny( labelroigray, barcode_edges, m_thresh, m_thresh*ratio, kernel_size );
+          //      Canny( labelroigray, barcode_edges, m_thresh, m_thresh*ratio, kernel_size );
 
-          //      Mat roiImageThreshed;
-        //        threshold(roiImagegray,roiImageThreshed,m_thresh,255,cv::THRESH_BINARY);
+                //Mat labelroi;
+                threshold(labelroigray,labelroigray,m_thresh,255,cv::THRESH_BINARY);
 
 
 
                 std::vector<std::vector<cv::Point> > in_labelcontours;
-                cv::findContours(barcode_edges, in_labelcontours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
+                cv::findContours(labelroigray, in_labelcontours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
                 std::vector<cv::Point> barcode_approx;
 
@@ -162,25 +165,7 @@ void VisionProcessing::ProcessImage(Mat original)
 
                     Scalar color2 = Scalar( 0, 0, 255);
 
-                   /* int tl_xgap=boundRect_label.tl().x-gap;
-                    if(tl_xgap<0){
-                        tl_xgap=0;
-                    }
 
-                    int tl_ygap=boundRect_label.tl().y-gap;
-                    if(tl_ygap<0){
-                        tl_ygap=0;
-                    }
-
-                    int br_xgap=boundRect_label.br().x+gap;
-                    if(br_xgap>boundRect_label.width){
-                        br_xgap=boundRect_label.width;
-                    }
-                    int br_ygap=boundRect_label.br().y+gap;
-                    if(br_ygap>boundRect_label.height){
-                        br_ygap=boundRect_label.height;
-                    }
-                    */
 
                     Rect barcode_boundrect_adjusted=barcode_boundrect+cv::Size(4.8*gap, 2*gap);
                     barcode_boundrect_adjusted.x-=2.4*gap;
@@ -203,24 +188,26 @@ void VisionProcessing::ProcessImage(Mat original)
                     }
 
                     rectangle( labelimage, barcode_boundrect_adjusted.tl(), barcode_boundrect_adjusted.br(), color2, 2, 8, 0 );
+*/
 
-                    Mat barcodeimg=labelimage(barcode_boundrect_adjusted);
+                    //Mat barcodeimg=labelimage(label_boundrect);
                     // cv::imwrite("e:/temp.jpeg",barcodeimg);
 
 
+
                     if(m_decoder!=0){
-                        QImage roiQimg=cvMat2QImage(barcodeimg);
+                        QImage roiQimg=cvMat2QImage(labelimage);
 
                         QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);
                         if(tag!=""){
 
                             //cvMat2QImage()
-                            CvPoint txtpt(barcode_boundrect_adjusted.tl());
+                            CvPoint txtpt(label_boundrect.tl());
 
                             if(txtpt.y<20)
-                                txtpt.y=barcode_boundrect_adjusted.height+20;
+                                txtpt.y=label_boundrect.height+20;
                             else
-                                txtpt.y=barcode_boundrect_adjusted.y-20;
+                                txtpt.y=label_boundrect.y-20;
 
                             putText(original, tag.toStdString(),txtpt,
                                     FONT_HERSHEY_COMPLEX_SMALL, 2, cvScalar(0,255,0), 2, CV_AA);
@@ -235,7 +222,8 @@ void VisionProcessing::ProcessImage(Mat original)
                         }
                     }
 
-                }
+
+
 
             }
         }

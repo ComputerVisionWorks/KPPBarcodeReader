@@ -20,6 +20,7 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 
     m_gpiomanager->exportPin(m_LedsPin);
     m_gpiomanager->setDirection(m_LedsPin,GPIO::OUTPUT);
+    m_gpiomanager->setValue(m_LedsPin,GPIO::HIGH);
 #endif
 
     m_decoder=decoder;
@@ -56,11 +57,11 @@ void VisionProcessing::ProcessImage(Mat original)
     //{
 
 
-    Mat imagegray,image_edges;
+    Mat imagegray,image_edges,imagegray_original;
 
     cvtColor(original,imagegray,CV_BGR2GRAY);
     int ratio = 3;
-
+    imagegray.copyTo(imagegray_original);
     /// Reduce noise with a kernel 3x3
     // blur( imagegray, imagegray, Size(3,3) );
     int kernel_size = 3;
@@ -126,7 +127,7 @@ void VisionProcessing::ProcessImage(Mat original)
 
             dilate(labelroigray, labelroigray,Mat(), Point(-1, -1), 1, 1, 1);
             double thr1=100;
-            Canny( labelroigray, barcode_edges, thr1,thr1*2, kernel_size );
+            Canny( labelroigray, barcode_edges, m_thresh,m_thresh*1, kernel_size );
 
             //Mat labelroi;
             //threshold(labelroigray,labelroigray,m_thresh,255,cv::THRESH_BINARY);
@@ -156,7 +157,7 @@ void VisionProcessing::ProcessImage(Mat original)
                 double perimeter = cv::arcLength(in_labelcontours[i],true);
                 if(perimeter<20) continue;
 
-                if(barcode_boundrect.height<20) continue;
+                if(barcode_boundrect.height<30) continue;
                 if(barcode_boundrect.width<20) continue;
                 if(barcode_boundrect.width>300) continue;
 
@@ -213,12 +214,13 @@ void VisionProcessing::ProcessImage(Mat original)
 
 
 
-                Mat barcodeimg=original(barcode_boundrect_adjusted);
+                Mat barcodeimg=imagegray(barcode_boundrect_adjusted);
 
 
 
 
                 if(m_decoder!=0){
+                    cv::normalize(barcodeimg, barcodeimg, 0, 255, NORM_MINMAX);
                     QImage roiQimg=cvMat2QImage(barcodeimg);
 
                     QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);

@@ -26,10 +26,10 @@ include(KPPBarcodeReader.pri)
 
 SOURCES += $$PWD/kppbarcodereader.cpp \
     $$PWD/visionprocessing.cpp \
-    visionthread.cpp
+    visioncapture.cpp
 
 HEADERS += $$PWD/kppbarcodereader.h \
     $$PWD/visionprocessing.h \
     kppbarcodereader_global.h \
-    visionthread.h
+    visioncapture.h
 

@@ -7,12 +7,14 @@
 #include <QObject>
 #include <QTimer>
 #include "visionprocessing.h"
+#include "visioncapture.h"
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
-#include "visionthread.h"
 
 
+#ifdef __linux__
 using namespace GPIO;
+#endif
 
 class KPPBARCODEREADER_EXPORT KPPBarcodeReader:public QObject
 {
@@ -35,7 +37,7 @@ public:
 
 
     void DisableDecoding();
-    void EnableDecoding();
+    void ShowCaptureImages(bool value=true);
     DecodeType decodeType() const;
 
     void setDecodeType(const DecodeType &decodeType);
@@ -50,7 +52,7 @@ private:
 
 
 
-    VisionThread* m_visionthread;
+   // VisionThread* m_visionthread;
 
     bool m_captureEnabled;
 
@@ -59,16 +61,20 @@ private:
 
     QZXing *decoder;
     VisionProcessing *m_visionprocessing;
+    VisionCapture* m_visioncapture;
+    QThread * m_processingthread;
+    QThread * m_capturethread;
 
     DecodeType m_decodeType;
 
     QGraphicsPixmapItem *m_CapturedPixmap;
 
-    void DoWork();
+
 public slots:
     void CaptureImageReady(const QImage &image);
-private slots:
 
+private slots:
+    void CaptureStarted();
 
 
 signals:

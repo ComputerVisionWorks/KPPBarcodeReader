@@ -1,7 +1,8 @@
 #include "kppbarcodereader.h"
 
-
+#ifdef __linux__
 using namespace GPIO;
+#endif
 
 
 
@@ -11,6 +12,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
 
 
+    qRegisterMetaType<cv::Mat>();
 
     m_captureEnabled=false;
     m_CapturedPixmap=0;
@@ -29,18 +31,33 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 
     m_decodeType=OneShotGoodRead;
 
+    m_visioncapture=new VisionCapture();
     m_visionprocessing = new VisionProcessing(0,decoder);
-    m_visionthread=new VisionThread(m_visionprocessing);
-    m_visionprocessing->moveToThread(m_visionthread);
 
-    connect(m_visionthread, SIGNAL(finished()), m_visionthread, SLOT(deleteLater()));
-    connect(m_visionprocessing,SIGNAL(ImageCaptured(QImage)),this,SLOT(CaptureImageReady(QImage)));
+    m_processingthread=new QThread(this);
 
 
+    m_visionprocessing->moveToThread(m_processingthread);
 
+    connect(m_processingthread, SIGNAL(finished()), m_processingthread, SLOT(deleteLater()));
+    connect(m_processingthread, SIGNAL(finished()), m_visionprocessing, SLOT(deleteLater()));
 
+    connect(m_visioncapture,SIGNAL(FrameReady(cv::Mat)),m_visionprocessing,SLOT(ProcessFrame(cv::Mat)));
+    connect(m_visionprocessing,SIGNAL(ImageReady(QImage)),this,SLOT(CaptureImageReady(QImage)));
 
-    m_visionthread->start();
+    m_capturethread=new QThread(this);
+    connect(m_capturethread, SIGNAL(finished()), m_capturethread, SLOT(deleteLater()));
+
+    connect(m_capturethread, SIGNAL(finished()), m_visioncapture, SLOT(deleteLater()));
+
+    connect(m_capturethread, SIGNAL(started()),this,SLOT(CaptureStarted()));
+
+    m_visioncapture->moveToThread(m_capturethread);
+
+    m_processingthread->start();
+    m_capturethread->start();
+
+     QMetaObject::invokeMethod(m_visioncapture, "StartCapture");
 
 }
 
@@ -48,22 +65,21 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer) :
 KPPBarcodeReader::~KPPBarcodeReader()
 {
 
-    m_visionthread->requestInterruption();
-    m_visionthread->wait();
+  //  m_visionthread->requestInterruption();
+//    m_visionthread->wait();
+
+    m_processingthread->quit();
+    m_processingthread->wait();
+    m_capturethread->quit();
+    m_capturethread->wait();
     delete decoder;
-    delete m_visionprocessing;
-
-}
-
-
-
-void KPPBarcodeReader::EnableDecoding()
-{
 
 
 }
 
-void KPPBarcodeReader::DisableDecoding()
+
+
+void KPPBarcodeReader::ShowCaptureImages(bool value)
 {
 
 
@@ -86,6 +102,11 @@ void KPPBarcodeReader::CaptureImageReady(const QImage &image)
 
     m_CapturedPixmap->setPixmap(QPixmap::fromImage(image));
     m_viewer->fitInView(m_CapturedPixmap,Qt::KeepAspectRatio);
+}
+
+void KPPBarcodeReader::CaptureStarted()
+{
+    qDebug() << "capture started";
 }
 
 

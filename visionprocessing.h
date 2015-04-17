@@ -7,11 +7,16 @@
 #include <QImage>
 #include "QZXing.h"
 #include "QGraphicsPixmapItem"
+#ifdef __linux__
 #include "GPIO/GPIOManager.h"
 #include "GPIO/GPIOConst.h"
+using namespace GPIO;
+#endif
+#include <QBasicTimer>
 
 using namespace cv;
-using namespace GPIO;
+
+
 
 class KPPBARCODEREADER_EXPORT VisionProcessing : public QObject
 {
@@ -19,32 +24,48 @@ class KPPBARCODEREADER_EXPORT VisionProcessing : public QObject
 public:
     explicit VisionProcessing(QObject *parent = 0,QZXing *decoder=0);
     ~VisionProcessing();
-    QList<QString> getBarcodeFromImage(Mat original);
-    static QImage cvMat2QImage(cv::Mat mat_img);
+
+    static const QImage cvMat2QImage(cv::Mat mat_img);
     static Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData=false, bool swap=false);
     double thresh() const;
     void setThresh(double thresh);
 
     double thresh_inner() const;
-    void setThresh_inner(double thresh_inner);
-
-    void StopCapture();
-    void Capture(int frames=5);
-    void CloseCamera();
-    void setCamera(int Index);
+    void setThresh_inner(double thresh_inner);    
+    static void ImageFrameDeleter(void* mat);
 private:
     //cv::Mat m_PrePorcessedImage;
     QZXing *m_decoder;
     double m_thresh;
     double m_thresh_inner;
+    #ifdef __linux__
     GPIOManager* m_gpiomanager;
+    #endif
     int m_LedsPin;
-    VideoCapture* cvcamera;
-signals:
-    void ImageCaptured(const QImage &img);
 
+    QBasicTimer m_timer;
+    cv::Mat m_ImageFrame;
+    bool m_processAll;
+    cv::Mat m_frame;
+    void ImageFrameQueue(const cv::Mat & frame);
+
+signals:
+
+    void ImageReady(const QImage &);
+    void CaptureStarted ();
     void BarCodesFound(QList<QString>);
 public slots:
+
+    void ProcessImage(Mat original);
+    void ProcessFrame(const cv::Mat & frame);
+    // QObject interface
+protected:
+
+
+    // QObject interface
+protected:
+    void timerEvent(QTimerEvent *);
 };
 
+Q_DECLARE_METATYPE(cv::Mat)
 #endif // VISIONPROCESSING_H

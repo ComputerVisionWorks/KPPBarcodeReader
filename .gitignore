@@ -1,5 +1,6 @@
 # C++ objects and libs
-
+debug/
+release/
 *.slo
 *.lo
 *.o
@@ -9,6 +10,7 @@
 *.so
 *.dll
 *.dylib
+*.obj
 
 # Qt-es
 

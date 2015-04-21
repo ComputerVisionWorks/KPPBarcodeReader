@@ -46,6 +46,9 @@ public:
     DecodeType decodeType() const;
     void setDecodeType(const DecodeType &decodeType);
 
+    int decodeinterval() const;
+    void setDecodeinterval(int decodeinterval);
+
 private:
     //cv::Mat m_PrePorcessedImage;
     QZXing *m_decoder;
@@ -57,8 +60,9 @@ private:
     int m_LedsPin;
     bool m_DecodeEnabled;
     DecodeType m_decodeType;
-
+    int m_decodeinterval;
     QBasicTimer m_timer;
+    QBasicTimer m_decodetimer_interval;
     cv::Mat m_ImageFrame;
     bool m_processAll;
     cv::Mat m_frame;

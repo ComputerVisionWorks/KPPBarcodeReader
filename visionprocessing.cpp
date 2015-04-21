@@ -21,13 +21,13 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 
     m_gpiomanager->exportPin(m_LedsPin);
     m_gpiomanager->setDirection(m_LedsPin,GPIO::OUTPUT);
-    m_gpiomanager->setValue(m_LedsPin,GPIO::HIGH);
 #endif
 
     m_decoder=decoder;
     m_DecodeEnabled=true;
 
     m_decodeType=OneShotGoodRead;
+    m_decodeinterval=5000;
 }
 
 
@@ -43,6 +43,10 @@ VisionProcessing::~VisionProcessing()
 
 void VisionProcessing::timerEvent(QTimerEvent *ev)
 {
+    if(ev->timerId()==m_decodetimer_interval.timerId()){
+        m_DecodeEnabled=true;
+        return;
+    }
     if (ev->timerId() != m_timer.timerId()) return;
 
     if(m_DecodeEnabled)
@@ -185,7 +189,11 @@ void VisionProcessing::ProcessImage(Mat original)
 
     if(gotBarcode){
         if(decodeType()==OneShotGoodRead){
-            m_DecodeEnabled=false;
+            setDecodeEnabled(false);
+        }
+        else if(decodeType()==Continuous){
+            setDecodeEnabled(false);
+            m_decodetimer_interval.start(m_decodeinterval,this);
         }
     }
 
@@ -293,6 +301,12 @@ bool VisionProcessing::DecodeEnabled() const
 void VisionProcessing::setDecodeEnabled(bool DecodeEnabled)
 {
     m_DecodeEnabled = DecodeEnabled;
+#ifdef __linux__
+    if(m_DecodeEnabled)
+        m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
+    else
+        m_gpiomanager->setValue(m_LedsPin,GPIO::HIGH);
+#endif
 }
 
 
@@ -320,6 +334,17 @@ void VisionProcessing::setDecodeType(const DecodeType &decodeType)
     m_DecodeEnabled=true;
 
 }
+int VisionProcessing::decodeinterval() const
+{
+    return m_decodeinterval;
+}
+
+void VisionProcessing::setDecodeinterval(int decodeinterval)
+{
+    m_decodeinterval = decodeinterval;
+
+}
+
 
 
 

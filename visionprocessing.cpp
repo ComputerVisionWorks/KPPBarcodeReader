@@ -24,7 +24,7 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 #endif
 
     m_decoder=decoder;
-    m_DecodeEnabled=true;
+    setDecodeEnabled(true);
 
     m_decodeType=OneShotGoodRead;
     m_decodeinterval=5000;
@@ -44,7 +44,7 @@ VisionProcessing::~VisionProcessing()
 void VisionProcessing::timerEvent(QTimerEvent *ev)
 {
     if(ev->timerId()==m_decodetimer_interval.timerId()){
-        m_DecodeEnabled=true;
+        setDecodeEnabled(true);
         return;
     }
     if (ev->timerId() != m_timer.timerId()) return;

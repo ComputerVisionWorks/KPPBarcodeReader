@@ -21,6 +21,7 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 
     m_gpiomanager->exportPin(m_LedsPin);
     m_gpiomanager->setDirection(m_LedsPin,GPIO::OUTPUT);
+
 #endif
 
     m_decoder=decoder;
@@ -112,6 +113,7 @@ void VisionProcessing::ProcessImage(Mat original)
         if (std::fabs(area) <10000 ||
                 std::fabs(area)> 100000 ||
                 label_boundrect.width>500 ||
+                label_boundrect.height>300 ||
                 label_boundrect.tl().x==0 || label_boundrect.tl().y==0 ||
                 label_boundrect.br().x>=original.size().width ||
                 label_boundrect.br().y>= original.size().height
@@ -137,7 +139,7 @@ void VisionProcessing::ProcessImage(Mat original)
 
             double xoffset=0;
 
-            double w=350+xoffset,h=150;
+            double w=425+xoffset,h=150;
             Rect centerdRect(mc.x-xoffset-w/2,mc.y-h/2,w,h);
 
             if(centerdRect.x<1 || centerdRect.y<1 || (centerdRect.x+centerdRect.width>original.size().width) || (centerdRect.y+centerdRect.height>original.size().height)) continue;

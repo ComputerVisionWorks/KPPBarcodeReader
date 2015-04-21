@@ -4,7 +4,7 @@
 using namespace GPIO;
 #endif
 
-
+Q_DECLARE_METATYPE(VisionProcessing::DecodeType)
 
 KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGraphicsView *viewer_pre) :
     QObject(parent)
@@ -37,7 +37,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
     decoder= new QZXing(this);
     decoder->setDecoder( QZXing::DecoderFormat_DATA_MATRIX);
 
-    m_decodeType=OneShotGoodRead;
+
 
     m_visioncapture=new VisionCapture();
     m_visionprocessing = new VisionProcessing(0,decoder);
@@ -66,7 +66,9 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
     m_processingthread->start();
     m_capturethread->start();
 
-     QMetaObject::invokeMethod(m_visioncapture, "StartCapture");
+
+
+    QMetaObject::invokeMethod(m_visioncapture, "StartCapture");
 
 }
 
@@ -95,16 +97,6 @@ void KPPBarcodeReader::ShowCaptureImages(bool value)
 }
 
 
-
-KPPBarcodeReader::DecodeType KPPBarcodeReader::decodeType() const
-{
-    return m_decodeType;
-}
-
-void KPPBarcodeReader::setDecodeType(const DecodeType &decodeType)
-{
-    m_decodeType = decodeType;
-}
 
 void KPPBarcodeReader::CaptureImageReady(const QImage &image)
 {

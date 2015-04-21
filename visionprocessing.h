@@ -21,7 +21,15 @@ using namespace cv;
 class KPPBARCODEREADER_EXPORT VisionProcessing : public QObject
 {
     Q_OBJECT
+     Q_ENUMS(DecodeType)
+
 public:
+    enum DecodeType {
+        OneShot=0,
+        OneShotGoodRead=1,
+        Continuous=2
+    };
+
     explicit VisionProcessing(QObject *parent = 0,QZXing *decoder=0);
     ~VisionProcessing();
 
@@ -33,6 +41,11 @@ public:
     double thresh_inner() const;
     void setThresh_inner(double thresh_inner);    
     static void ImageFrameDeleter(void* mat);
+    bool DecodeEnabled() const;
+    void setDecodeEnabled(bool DecodeEnabled);
+    DecodeType decodeType() const;
+    void setDecodeType(const DecodeType &decodeType);
+
 private:
     //cv::Mat m_PrePorcessedImage;
     QZXing *m_decoder;
@@ -42,6 +55,8 @@ private:
     GPIOManager* m_gpiomanager;
     #endif
     int m_LedsPin;
+    bool m_DecodeEnabled;
+    DecodeType m_decodeType;
 
     QBasicTimer m_timer;
     cv::Mat m_ImageFrame;
@@ -54,12 +69,13 @@ private:
     Point2f rotPoint(const Mat &R, const Point2f &p);
     Mat rotateImage(const Mat &fromI, Mat *toI, const Rect &fromroi, double angle);
     Size rotatedImageBB(const Mat &R, const Rect &bb);
+    bool getBarcodeInRect(const Mat &original, const Mat &labelimage, const Rect &roi);
 signals:
 
     void ImageReady(const QImage &);
     void PreprocessedImageReady(const QImage &);
     void CaptureStarted ();
-    void BarCodesFound(QList<QString>);
+    void BarCodesFound(QString);
 public slots:
 
     void ProcessImage(Mat original);

@@ -20,14 +20,10 @@ class KPPBARCODEREADER_EXPORT KPPBarcodeReader:public QObject
 {
     Q_OBJECT
 
-    Q_ENUMS(DecodeType)
+
 
 public:
-    enum DecodeType {
-        OneShot=0,
-        OneShotGoodRead=1,
-        Continuous=2
-    };
+
 
     KPPBarcodeReader(QObject *parent=0, QGraphicsView * viewer=0,QGraphicsView * viewer_pre=0);
     ~KPPBarcodeReader();
@@ -38,9 +34,7 @@ public:
 
     void DisableDecoding();
     void ShowCaptureImages(bool value=true);
-    DecodeType decodeType() const;
 
-    void setDecodeType(const DecodeType &decodeType);
 
 
 
@@ -69,7 +63,7 @@ private:
     QThread * m_processingthread;
     QThread * m_capturethread;
 
-    DecodeType m_decodeType;
+
 
 
 
@@ -83,7 +77,7 @@ private slots:
 
 
 signals:
-    void BarcodesFound(QList<QString>);
+
 };
 
 #endif // KPPBARCODEREADER_H

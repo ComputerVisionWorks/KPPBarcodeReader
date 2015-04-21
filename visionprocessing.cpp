@@ -25,8 +25,9 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 #endif
 
     m_decoder=decoder;
+    m_DecodeEnabled=true;
 
-
+    m_decodeType=OneShotGoodRead;
 }
 
 
@@ -43,7 +44,10 @@ VisionProcessing::~VisionProcessing()
 void VisionProcessing::timerEvent(QTimerEvent *ev)
 {
     if (ev->timerId() != m_timer.timerId()) return;
-    ProcessImage(m_frame);
+
+    if(m_DecodeEnabled)
+        ProcessImage(m_frame);
+
     m_frame.release();
     m_timer.stop();
 }
@@ -52,38 +56,44 @@ void VisionProcessing::timerEvent(QTimerEvent *ev)
 void VisionProcessing::ProcessImage(Mat original)
 {
     QList<QString> m_list;
-
+    bool gotBarcode=false;
 
     // try
     //{
 
 
-    Mat imagegray,image_edges,imagegray_original;
+    Mat imagegray,image_edges;
+
 
     cvtColor(original,imagegray,CV_BGR2GRAY);
-    int ratio = 2;
-    imagegray.copyTo(imagegray_original);
-    /// Reduce noise with a kernel 3x3
-    blur( imagegray, imagegray, Size(2,2) );
+
+
+
+
+    // equalizeHist(imagegray,imagegray);
+
     int kernel_size = 3;
-    Canny( imagegray, image_edges, m_thresh, m_thresh*ratio, kernel_size );
+
+    //GaussianBlur( imagegray, imagegray, Size(3,3), 1, 1, BORDER_DEFAULT );
+
+    //  Canny( imagegray, image_edges, m_thresh, m_thresh*2, kernel_size );
 
 
 
-    // threshold(imagegray,imagegray,m_thresh,255,cv::THRESH_BINARY);
+
+    //    const QImage image2=VisionProcessing::cvMat2QImage(image_edges);
+    //    Q_ASSERT(image2.constBits() == image_edges.data);
+    //    emit PreprocessedImageReady(image2);
+
+    //return;
+
+    threshold(imagegray,image_edges,m_thresh,255,cv::THRESH_BINARY);
 
 
     std::vector<std::vector<cv::Point> > image_contours;
 
     cv::findContours(image_edges, image_contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
-    /*
-        dst = Mat::zeros(Imagegray.size().height,Imagegray.size().width,original.type());
-
-        cvtColor(detected_edges,detected_edges,CV_GRAY2BGR);
-
-        dst.copyTo( original, detected_edges);
-        */
 
     std::vector<cv::Point> image_contours_approx;
 
@@ -96,7 +106,8 @@ void VisionProcessing::ProcessImage(Mat original)
         // Skip small or non-convex objects
         double area=contourArea(image_contours[i]);
         if (std::fabs(area) <10000 ||
-                std::fabs(area)> 200000 ||
+                std::fabs(area)> 100000 ||
+                label_boundrect.width>500 ||
                 label_boundrect.tl().x==0 || label_boundrect.tl().y==0 ||
                 label_boundrect.br().x>=original.size().width ||
                 label_boundrect.br().y>= original.size().height
@@ -111,23 +122,31 @@ void VisionProcessing::ProcessImage(Mat original)
         {
             Scalar color = Scalar( 255, 0, 0);
             drawContours( original, image_contours, i, color, 2, 8, std::vector<Vec4i>(),0, Point() );
-            //label_boundrect-=Size(100,0);
-            Mat labelimage_origin=original(label_boundrect);
-            Mat labelimage;
-            labelimage_origin.copyTo(labelimage);
-
-
             RotatedRect rotrect=minAreaRect(image_contours[i]);
 
 
+            Moments mu;
+            mu = moments( image_contours[i], false );
+            Point2f mc;
+            mc = Point2f( mu.m10/mu.m00 , mu.m01/mu.m00 );
+            circle( original, mc, 4, color, -1, 8, 0 );
+
+            double xoffset=0;
+
+            double w=350+xoffset,h=150;
+            Rect centerdRect(mc.x-xoffset-w/2,mc.y-h/2,w,h);
+
+            if(centerdRect.x<1 || centerdRect.y<1 || (centerdRect.x+centerdRect.width>original.size().width) || (centerdRect.y+centerdRect.height>original.size().height)) continue;
+            rectangle( original,centerdRect,Scalar(0,255,0),1, 8);
+
+
+
+            Mat labelimage_origin=original(centerdRect);
+            Mat labelimage;
+
+            labelimage_origin.copyTo(labelimage);
+
             RotateWithoutCrop(rotrect.angle,labelimage,labelimage);
-  //          cv::Mat rot = cv::getRotationMatrix2D(rotrect.center,0, 1.0);
-
-//            warpAffine(labelimage,labelimage,rot,rotrect.boundingRect().size(),INTER_CUBIC);
-
-
-
-            //RotateWithoutCrop(-rotrect.angle,labelimage,labelimage);
 
             CvPoint txtpt2(label_boundrect.tl());
             txtpt2.y=label_boundrect.y;
@@ -137,172 +156,22 @@ void VisionProcessing::ProcessImage(Mat original)
 
 
 
+            if(m_DecodeEnabled)
+                gotBarcode=getBarcodeInRect(original,labelimage,centerdRect);
 
-            if(m_decoder!=0){
-                cv::normalize(labelimage, labelimage, 0, 255, NORM_MINMAX);
+//                Rect centerdRect2(mc.x+50-w/2,mc.y-h/2,w,h);
+//                rectangle( original,centerdRect2,Scalar(255,0,0),1, 8);
 
-                QImage roiQimg=cvMat2QImage(labelimage);
+//                Mat labelimage_origin2=original(centerdRect2);
+//                Mat labelimage2;
 
-                const QImage image2=VisionProcessing::cvMat2QImage(labelimage);
+//                labelimage_origin2.copyTo(labelimage2);
+//                RotateWithoutCrop(rotrect.angle,labelimage2,labelimage2);
+//                if(getBarcodeInRect(original,labelimage2,centerdRect2)){
+//                    break;
+//                }
+           // }
 
-                Q_ASSERT(image2.constBits() == labelimage.data);
-                emit PreprocessedImageReady(image2);
-
-                QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);
-
-                if(tag!=""){
-
-                    //cvMat2QImage()
-                    CvPoint txtpt(label_boundrect.tl());
-
-                    txtpt.y=label_boundrect.y+label_boundrect.height+20;
-
-
-                    putText(original, tag.toStdString(),txtpt,
-                            FONT_HERSHEY_PLAIN, 1, cvScalar(0,255,0), 2, CV_AA);
-
-
-                    m_list.append(tag);
-                    break;
-                    //emit BarCodeFound(tag);
-
-
-
-
-                }
-
-            }
-
-
-
-
-
-            /*
-
-            Mat barcode_edges,labelroigray;
-
-            cvtColor(labelimage,labelroigray,CV_BGR2GRAY);
-
-            /// Reduce noise with a kernel 3x3
-            //  blur( labelroigray, labelroigray, Size(3,3) );
-            int kernel_size = 3;
-
-            dilate(labelroigray, labelroigray,Mat(), Point(-1, -1), 1, 1, 1);
-            double thr1=100;
-            Canny( labelroigray, barcode_edges, m_thresh,m_thresh*1, kernel_size );
-
-            //Mat labelroi;
-            //threshold(labelroigray,labelroigray,m_thresh,255,cv::THRESH_BINARY);
-
-
-
-            std::vector<std::vector<cv::Point> > in_labelcontours;
-            cv::findContours(barcode_edges, in_labelcontours, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE);
-
-            std::vector<cv::Point> barcode_approx;
-
-            for (int i = 0; i < in_labelcontours.size(); i++)
-            {
-                Scalar color_in_label = Scalar( 0, 255, 0);
-                Scalar color_barcode_rect = Scalar( 0, 0, 255);
-                //drawContours( labelimage, in_labelcontours, i, color3, 2, 8, std::vector<Vec4i>(),0, Point() );
-                // Approximate contour with accuracy proportional
-                // to the contour perimeter
-                cv::approxPolyDP(cv::Mat(in_labelcontours[i]), barcode_approx, cv::arcLength(cv::Mat(in_labelcontours[i]), true)*0.02, true);
-
-                if(barcode_approx.size()<2) continue;
-
-                Rect barcode_boundrect=boundingRect(barcode_approx);
-
-                //RotatedRect barcodeRect =minAreaRect(in_labelcontours[i]);
-                double area=contourArea(in_labelcontours[i]);
-                double perimeter = cv::arcLength(in_labelcontours[i],true);
-
-                if(perimeter<20) continue;
-
-                if(barcode_boundrect.height<30) continue;
-                if(barcode_boundrect.width<20) continue;
-                if(barcode_boundrect.width>300) continue;
-
-                                          barcode_boundrect.height<0 ||
-                            barcode_boundrect.height>1000 ||
-                            barcode_boundrect.width<0 ||
-                            barcode_boundrect.width>1000 ||
-                            std::fabs(area) <30 ||
-                            std::fabs(area) >10000
-                            )
-                        continue;
-
-                drawContours( labelimage, in_labelcontours, i, color_in_label, 2, 8, std::vector<Vec4i>(),0, Point() );
-
-
-
-
-                Rect barcode_boundrect_adjusted=Rect(Point(label_boundrect.x,label_boundrect.y),Size(barcode_boundrect.size().width*2.5,barcode_boundrect.size().height*2.5));
-
-                barcode_boundrect_adjusted-=Point(barcode_boundrect.x,barcode_boundrect.y);
-
-
-
-
-                if(barcode_boundrect_adjusted.x<=0){
-                    barcode_boundrect_adjusted.x=1;
-                }
-
-                if(barcode_boundrect_adjusted.y<=0){
-                    barcode_boundrect_adjusted.y=1;
-                }
-
-                if(barcode_boundrect_adjusted.width+barcode_boundrect_adjusted.x>=original.size().width){
-                    barcode_boundrect_adjusted.width=original.size().width-barcode_boundrect_adjusted.x;
-                }
-
-                if(barcode_boundrect_adjusted.height+barcode_boundrect_adjusted.y>=original.size().height){
-                    barcode_boundrect_adjusted.height=original.size().height-barcode_boundrect_adjusted.y;
-                }
-
-                //   rectangle( original, barcode_boundrect_adjusted.tl(), barcode_boundrect_adjusted.br(), color2, 2, 8, 0 );
-
-
-
-                Mat barcodeimg=imagegray(barcode_boundrect_adjusted);
-                rectangle( original, barcode_boundrect_adjusted.tl(), barcode_boundrect_adjusted.br(), color_barcode_rect, 2, 8, 0 );
-
-
-
-                if(m_decoder!=0){
-                    cv::normalize(barcodeimg, barcodeimg, 0, 255, NORM_MINMAX);
-                    QImage roiQimg=cvMat2QImage(barcodeimg);
-
-                    QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);
-
-                    if(tag!=""){
-
-                        //cvMat2QImage()
-                        CvPoint txtpt(label_boundrect.tl());
-
-                        if(txtpt.y<20)
-                            txtpt.y=label_boundrect.height+20;
-                        else
-                            txtpt.y=label_boundrect.y-20;
-
-                        putText(original, tag.toStdString(),txtpt,
-                                FONT_HERSHEY_COMPLEX_SMALL, 2, cvScalar(0,255,0), 2, CV_AA);
-
-
-                        m_list.append(tag);
-                        break;
-                        //emit BarCodeFound(tag);
-
-
-
-
-                    }
-
-                }
-
-
-            }*/
 
         }
     }
@@ -313,6 +182,14 @@ void VisionProcessing::ProcessImage(Mat original)
 
     Q_ASSERT(image.constBits() == original.data);
     emit ImageReady(image);
+
+    if(gotBarcode){
+        if(decodeType()==OneShotGoodRead){
+            m_DecodeEnabled=false;
+        }
+    }
+
+
     /*  }
     catch( cv::Exception& e )
     {
@@ -325,6 +202,45 @@ void VisionProcessing::ProcessImage(Mat original)
 
 
 
+}
+
+bool VisionProcessing::getBarcodeInRect(const Mat &original,const Mat &labelimage,const Rect &roi){
+
+
+    if(m_decoder!=0){
+        cv::normalize(labelimage, labelimage, 0, 255, NORM_MINMAX);
+
+        QImage roiQimg=cvMat2QImage(labelimage);
+
+        const QImage image2=VisionProcessing::cvMat2QImage(labelimage);
+        Q_ASSERT(image2.constBits() == labelimage.data);
+        emit PreprocessedImageReady(image2);
+
+        QString tag= m_decoder->decodeImage(roiQimg,-1, -1, false);
+
+        if(tag!=""){
+
+            //cvMat2QImage()
+            CvPoint txtpt(roi.tl());
+
+            txtpt.y=roi.y+roi.height+20;
+
+
+            putText(original, tag.toStdString(),txtpt,
+                    FONT_HERSHEY_PLAIN, 1, cvScalar(0,255,0), 2, CV_AA);
+
+
+            emit BarCodesFound(tag);
+
+            return true;
+
+
+
+        }
+
+    }
+
+    return false;
 }
 
 void VisionProcessing::ProcessFrame(const Mat &frame)
@@ -369,14 +285,41 @@ void VisionProcessing::ImageFrameDeleter(void *mat)
 {
     delete static_cast<cv::Mat*>(mat);
 }
+bool VisionProcessing::DecodeEnabled() const
+{
+    return m_DecodeEnabled;
+}
+
+void VisionProcessing::setDecodeEnabled(bool DecodeEnabled)
+{
+    m_DecodeEnabled = DecodeEnabled;
+}
+
 
 void VisionProcessing::ImageFrameQueue(const Mat &frame)
 {
     if (!m_frame.empty()) qDebug() << "Converter dropped frame!";
     m_frame = frame;
+
     if (! m_timer.isActive()) m_timer.start(0, this);
+
+
+
 }
 
+
+
+VisionProcessing::DecodeType VisionProcessing::decodeType() const
+{
+    return m_decodeType;
+}
+
+void VisionProcessing::setDecodeType(const DecodeType &decodeType)
+{
+    m_decodeType = decodeType;
+    m_DecodeEnabled=true;
+
+}
 
 
 

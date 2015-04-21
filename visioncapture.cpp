@@ -2,13 +2,25 @@
 
 VisionCapture::VisionCapture(QObject *parent) : QObject(parent)
 {
-
+setCaptureInterval(10);
 }
 
 VisionCapture::~VisionCapture()
 {
 
 }
+int VisionCapture::CaptureInterval() const
+{
+    return m_CaptureInterval;
+}
+
+void VisionCapture::setCaptureInterval(int CaptureInterval)
+{
+    m_CaptureInterval = CaptureInterval;
+    m_timer.stop();
+    m_timer.start(m_CaptureInterval,this);
+}
+
 
 void VisionCapture::StartCapture(int cam)
 {
@@ -20,7 +32,7 @@ void VisionCapture::StartCapture(int cam)
         m_videoCapture->set(CV_CAP_PROP_FRAME_HEIGHT,480);
         m_videoCapture->set(CV_CAP_PROP_FPS,15);
 
-        m_timer.start(0, this);
+        m_timer.start(m_CaptureInterval, this);
         emit CaptureStarted();
     }
 }

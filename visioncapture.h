@@ -12,8 +12,12 @@ class VisionCapture : public QObject
 public:
     explicit VisionCapture(QObject *parent = 0);
     ~VisionCapture();
+    int CaptureInterval() const;
+    void setCaptureInterval(int CaptureInterval);
+
 private:
     QBasicTimer m_timer;
+    int m_CaptureInterval;
     QScopedPointer<cv::VideoCapture> m_videoCapture;
 signals:
     void CaptureStarted();

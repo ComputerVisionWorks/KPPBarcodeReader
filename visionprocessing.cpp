@@ -303,9 +303,9 @@ void VisionProcessing::setDecodeEnabled(bool DecodeEnabled)
     m_DecodeEnabled = DecodeEnabled;
 #ifdef __linux__
     if(m_DecodeEnabled)
-        m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
-    else
         m_gpiomanager->setValue(m_LedsPin,GPIO::HIGH);
+    else
+        m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
 #endif
 }
 

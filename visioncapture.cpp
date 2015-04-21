@@ -2,7 +2,7 @@
 
 VisionCapture::VisionCapture(QObject *parent) : QObject(parent)
 {
-setCaptureInterval(50);
+setCaptureInterval(10);
 }
 
 VisionCapture::~VisionCapture()
@@ -46,6 +46,7 @@ void VisionCapture::timerEvent(QTimerEvent *ev)
 {
     if (ev->timerId() != m_timer.timerId()) return;
     cv::Mat frame;
+
     if (!m_videoCapture->read(frame)) { // Blocks until a new frame is ready
         m_timer.stop();
         return;

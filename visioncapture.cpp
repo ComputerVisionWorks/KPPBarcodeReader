@@ -2,7 +2,7 @@
 
 VisionCapture::VisionCapture(QObject *parent) : QObject(parent)
 {
-setCaptureInterval(10);
+setCaptureInterval(100);
 }
 
 VisionCapture::~VisionCapture()

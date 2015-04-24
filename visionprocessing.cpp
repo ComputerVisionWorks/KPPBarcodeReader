@@ -15,13 +15,14 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
     m_processAll=false;
 
 #ifdef __linux__
+#if defined(BBB)
     m_gpiomanager=GPIOManager::getInstance();
 
     m_LedsPin = GPIOConst::getInstance()->getGpioByKey("P8_13");
 
     m_gpiomanager->exportPin(m_LedsPin);
     m_gpiomanager->setDirection(m_LedsPin,GPIO::OUTPUT);
-
+#endif
 #endif
 
     m_decoder=decoder;
@@ -36,7 +37,9 @@ VisionProcessing::~VisionProcessing()
 {
 
 #ifdef __linux__
+#if defined(BBB)
     delete m_gpiomanager;
+#endif
 #endif
 }
 
@@ -239,7 +242,7 @@ bool VisionProcessing::getBarcodeInRect(const Mat &original,const Mat &labelimag
             putText(original, tag.toStdString(),txtpt,
                     FONT_HERSHEY_PLAIN, 1, cvScalar(0,255,0), 2, CV_AA);
 
-
+            qDebug()<<"barcode detected:"<< tag;
             emit BarCodesFound(tag);
 
             return true;
@@ -304,10 +307,12 @@ void VisionProcessing::setDecodeEnabled(bool DecodeEnabled)
 {
     m_DecodeEnabled = DecodeEnabled;
 #ifdef __linux__
+    #if defined(BBB)
     if(m_DecodeEnabled)
         m_gpiomanager->setValue(m_LedsPin,GPIO::HIGH);
     else
         m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
+#endif
 #endif
 }
 

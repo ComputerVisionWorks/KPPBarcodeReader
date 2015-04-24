@@ -13,7 +13,9 @@
 
 
 #ifdef __linux__
+#if defined(BBB)
 using namespace GPIO;
+#endif
 #endif
 
 class KPPBARCODEREADER_EXPORT KPPBarcodeReader:public QObject

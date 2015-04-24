@@ -1,7 +1,9 @@
 #include "kppbarcodereader.h"
 
 #ifdef __linux__
+#if defined(BBB)
 using namespace GPIO;
+#endif
 #endif
 
 Q_DECLARE_METATYPE(VisionProcessing::DecodeType)

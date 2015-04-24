@@ -8,9 +8,14 @@
 #include "QZXing.h"
 #include "QGraphicsPixmapItem"
 #ifdef __linux__
-#include "GPIO/GPIOManager.h"
-#include "GPIO/GPIOConst.h"
-using namespace GPIO;
+#if defined(BBB)
+    #include "GPIO/GPIOManager.h"
+    #include "GPIO/GPIOConst.h"
+    using namespace GPIO;
+#else
+
+#endif
+
 #endif
 #include <QBasicTimer>
 
@@ -55,7 +60,9 @@ private:
     double m_thresh;
     double m_thresh_inner;
     #ifdef __linux__
-    GPIOManager* m_gpiomanager;
+    #if defined(BBB)
+        GPIOManager* m_gpiomanager;
+    #endif
     #endif
     int m_LedsPin;
     bool m_DecodeEnabled;

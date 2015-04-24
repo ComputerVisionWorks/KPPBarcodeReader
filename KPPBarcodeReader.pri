@@ -4,11 +4,12 @@ unix {
     LIBS += -lQZXing
     LIBS += -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_features2d -lopencv_videoio
 
+BBBB{
     LIBS += -L$$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlackGPIO/debug/ -lQBeagleBoneBlackGPIO
 
     INCLUDEPATH += $$PWD/../BeagleBoneBlack-GPIO/
     DEPENDPATH += $$PWD/../BeagleBoneBlack-GPIO/QBeagleBoneBlackGPIO/debug
-
+}
 
 
 }

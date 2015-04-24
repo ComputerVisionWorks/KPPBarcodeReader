@@ -42,6 +42,9 @@ public:
 
 
 
+    bool captureEnabled() const;
+    void setCaptureEnabled(bool captureEnabled);
+
 private:
     bool isCapturingImage;
     QGraphicsView *m_viewer;
@@ -64,6 +67,7 @@ private:
     VisionCapture* m_visioncapture;
     QThread * m_processingthread;
     QThread * m_capturethread;
+
 
 
 

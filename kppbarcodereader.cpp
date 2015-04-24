@@ -66,6 +66,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
     m_visioncapture->moveToThread(m_capturethread);
 
     m_processingthread->start();
+
     m_capturethread->start();
 
 
@@ -80,7 +81,9 @@ KPPBarcodeReader::~KPPBarcodeReader()
 
   //  m_visionthread->requestInterruption();
 //    m_visionthread->wait();
-
+    if(m_capturethread->isRunning()==false){
+        m_capturethread->start();
+    }
     m_processingthread->quit();
     m_processingthread->wait();
     m_capturethread->quit();
@@ -97,6 +100,26 @@ void KPPBarcodeReader::ShowCaptureImages(bool value)
 
 
 }
+bool KPPBarcodeReader::captureEnabled() const
+{
+    return m_captureEnabled;
+}
+
+void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
+{
+    m_captureEnabled = captureEnabled;
+    if(m_captureEnabled){
+        if(m_capturethread->isRunning()==false){
+         //   m_capturethread->start();
+        }
+    }
+    else{
+        if(m_capturethread->isRunning()==true){
+            //m_capturethread->;
+        }
+    }
+}
+
 
 
 

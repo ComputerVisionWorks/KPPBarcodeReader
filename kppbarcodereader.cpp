@@ -78,15 +78,11 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
 
 KPPBarcodeReader::~KPPBarcodeReader()
 {
-
-  //  m_visionthread->requestInterruption();
-//    m_visionthread->wait();
-    if(m_capturethread->isRunning()==false){
-        m_capturethread->start();
-    }
-    m_processingthread->quit();
+    m_processingthread->Resume();
+    m_processingthread->requestInterruption();
     m_processingthread->wait();
-    m_capturethread->quit();
+    m_capturethread->Resume();
+    m_capturethread->requestInterruption();
     m_capturethread->wait();
     delete decoder;
 
@@ -110,12 +106,12 @@ void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
     m_captureEnabled = captureEnabled;
     if(m_captureEnabled){
         if(m_capturethread->isRunning()==false){
-         //   m_capturethread->start();
+         m_capturethread->Resume();
         }
     }
     else{
         if(m_capturethread->isRunning()==true){
-            //m_capturethread->;
+            m_capturethread->Pause();
         }
     }
 }

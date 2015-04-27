@@ -10,7 +10,7 @@
 #include "visioncapture.h"
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
-
+#include "kppqtthread.h"
 
 #ifdef __linux__
 #if defined(BBB)

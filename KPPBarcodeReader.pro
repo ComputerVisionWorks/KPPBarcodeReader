@@ -22,6 +22,7 @@ unix {
 }
 
 include(KPPBarcodeReader.pri)
+include(../KPPQtCommonLib/KPPQtCommonLib.pri)
 
 
 SOURCES += $$PWD/kppbarcodereader.cpp \

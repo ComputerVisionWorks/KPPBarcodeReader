@@ -5,8 +5,9 @@
 #include <opencv2/opencv.hpp>
 #include <QBasicTimer>
 #include <QTimerEvent>
+#include "kppbarcodereader_global.h"
 
-class VisionCapture : public QObject
+class KPPBARCODEREADER_EXPORT  VisionCapture : public QObject
 {
     Q_OBJECT
 public:

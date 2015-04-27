@@ -25,6 +25,10 @@ CONFIG(release, debug|release): LIBS += -L$$PWD/../ExternalLibs/OpenCV/lib/ -lop
 CONFIG(debug, debug|release): LIBS += -L$$PWD/../ExternalLibs/OpenCV/lib/ -lopencv_core300d -lopencv_imgproc300d -lopencv_highgui300d -lopencv_imgcodecs300d -lopencv_features2d300d -lopencv_videoio300d
 CONFIG(release, debug|release): LIBS += -L$$PWD/../QZXing/source/release/ -lQZXing2
 CONFIG(debug, debug|release): LIBS += -L$$PWD/../QZXing/source/debug/ -lQZXing2
+
+    CONFIG(release, debug|release): LIBS += -L$$PWD/../KPPQtCommonLib/release -lKPPQtCommonLib
+    CONFIG(debug, debug|release): LIBS += -L$$PWD/../KPPQtCommonLib/debug -lKPPQtCommonLib
+
 }
 
 

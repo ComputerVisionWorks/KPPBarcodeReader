@@ -63,6 +63,7 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
 
     connect(m_capturethread, SIGNAL(started()),this,SLOT(CaptureStarted()));
 
+    m_visioncapture->InitCapture(0,false);
     m_visioncapture->moveToThread(m_capturethread);
 
     m_processingthread->start();
@@ -71,18 +72,17 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
 
 
 
-    QMetaObject::invokeMethod(m_visioncapture, "StartCapture");
+
 
 }
 
 
 KPPBarcodeReader::~KPPBarcodeReader()
 {
-    m_processingthread->Resume();
-    m_processingthread->requestInterruption();
+
+    m_processingthread->quit();
     m_processingthread->wait();
-    m_capturethread->Resume();
-    m_capturethread->requestInterruption();
+    m_capturethread->quit();
     m_capturethread->wait();
     delete decoder;
 
@@ -105,14 +105,14 @@ void KPPBarcodeReader::setCaptureEnabled(bool captureEnabled)
 {
     m_captureEnabled = captureEnabled;
     if(m_captureEnabled){
-        if(m_capturethread->isRunning()==false){
-         m_capturethread->Resume();
-        }
+
+         //m_visioncapture->StartCapture();
+         QMetaObject::invokeMethod(m_visioncapture, "StartCapture");
+
     }
     else{
-        if(m_capturethread->isRunning()==true){
-            m_capturethread->Pause();
-        }
+        //m_visioncapture->StopCapture();
+         QMetaObject::invokeMethod(m_visioncapture, "StopCapture");
     }
 }
 

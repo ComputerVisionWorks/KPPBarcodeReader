@@ -6,6 +6,7 @@
 #include <QBasicTimer>
 #include <QTimerEvent>
 #include "kppbarcodereader_global.h"
+#include <QMutex>
 
 class KPPBARCODEREADER_EXPORT  VisionCapture : public QObject
 {
@@ -20,12 +21,14 @@ private:
     QBasicTimer m_timer;
     int m_CaptureInterval;
     QScopedPointer<cv::VideoCapture> m_videoCapture;
+    QMutex mutex;
 signals:
     void CaptureStarted();
     void FrameReady(const cv::Mat &);
 public slots:
-    void StartCapture(int cam = 0);
+    void InitCapture(int cam = 0, bool start=true);
     void StopCapture();
+    void StartCapture();
 
     // QObject interface
 protected:

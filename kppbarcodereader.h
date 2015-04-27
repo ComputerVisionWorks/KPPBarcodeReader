@@ -10,7 +10,8 @@
 #include "visioncapture.h"
 #include<QGraphicsView>
 #include <QGraphicsPixmapItem>
-#include "kppqtthread.h"
+#include "kpptcpserver.h"
+#include "kpptcpclientthread.h"
 
 #ifdef __linux__
 #if defined(BBB)
@@ -80,6 +81,7 @@ public slots:
 
 private slots:
     void CaptureStarted();
+    void NewClientConnected(KPPQtCommon::KPPTCPClientThread* ClientThread );
 
 
 signals:

@@ -19,6 +19,8 @@
 #endif
 #include <QBasicTimer>
 
+#include "kpptcpclientthread.h"
+
 using namespace cv;
 
 
@@ -54,12 +56,16 @@ public:
     int decodeinterval() const;
     void setDecodeinterval(int decodeinterval);
 
+    KPPQtCommon::KPPTCPClientThread *clientTCP() const;
+    void setClientTCP(KPPQtCommon::KPPTCPClientThread *clientTCP);
+
 private:
     //cv::Mat m_PrePorcessedImage;
     QZXing *m_decoder;
     double m_thresh;
     double m_thresh_inner;
-    #ifdef __linux__
+    QMutex mutex;
+#ifdef __linux__
     #if defined(BBB)
         GPIOManager* m_gpiomanager;
     #endif
@@ -81,6 +87,9 @@ private:
     Mat rotateImage(const Mat &fromI, Mat *toI, const Rect &fromroi, double angle);
     Size rotatedImageBB(const Mat &R, const Rect &bb);
     bool getBarcodeInRect(const Mat &original, const Mat &labelimage, const Rect &roi);
+
+    KPPQtCommon::KPPTCPClientThread *m_clientTCP;
+
 signals:
 
     void ImageReady(const QImage &);

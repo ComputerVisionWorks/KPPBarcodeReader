@@ -11,7 +11,7 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 {
     m_thresh=180;
     m_thresh_inner=180;
-
+        m_clientTCP=0;
     m_processAll=false;
 
 #ifdef __linux__
@@ -191,6 +191,11 @@ void VisionProcessing::ProcessImage(Mat original)
 
     Q_ASSERT(image.constBits() == original.data);
     emit ImageReady(image);
+    mutex.lock();
+    if(m_clientTCP!=0){
+        m_clientTCP->SendImage(image);
+    }
+    mutex.unlock();
 
     if(gotBarcode){
         if(decodeType()==OneShotGoodRead){
@@ -255,6 +260,20 @@ bool VisionProcessing::getBarcodeInRect(const Mat &original,const Mat &labelimag
 
     return false;
 }
+KPPQtCommon::KPPTCPClientThread *VisionProcessing::clientTCP() const
+{
+
+    return m_clientTCP;
+
+}
+
+void VisionProcessing::setClientTCP(KPPQtCommon::KPPTCPClientThread *clientTCP)
+{
+    mutex.lock();
+    m_clientTCP = clientTCP;
+    mutex.unlock();
+}
+
 
 void VisionProcessing::ProcessFrame(const Mat &frame)
 {

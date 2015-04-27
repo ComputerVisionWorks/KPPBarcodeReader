@@ -12,6 +12,8 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
     QObject(parent)
 {
 
+    KPPQtCommon::KPPTCPServer *server=new KPPQtCommon::KPPTCPServer(this);
+
 
 
     qRegisterMetaType<cv::Mat>();
@@ -72,6 +74,8 @@ KPPBarcodeReader::KPPBarcodeReader(QObject *parent, QGraphicsView *viewer, QGrap
 
 
 
+    connect(server, SIGNAL(NewClientConnected( KPPQtCommon::KPPTCPClientThread*)),this,SLOT(NewClientConnected(KPPQtCommon::KPPTCPClientThread*)));
+    server->startServer();
 
 
 }
@@ -135,6 +139,11 @@ void KPPBarcodeReader::PreProcessedImageReady(const QImage &image)
 void KPPBarcodeReader::CaptureStarted()
 {
     qDebug() << "capture started";
+}
+
+void KPPBarcodeReader::NewClientConnected(KPPQtCommon::KPPTCPClientThread *ClientThread)
+{
+    m_visionprocessing->setClientTCP(ClientThread);
 }
 
 

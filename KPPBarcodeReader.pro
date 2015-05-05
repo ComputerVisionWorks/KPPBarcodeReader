@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets concurrent
+QT       += core gui widgets network concurrent
 
 TARGET = KPPBarcodeReader
 TEMPLATE = lib

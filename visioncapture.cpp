@@ -32,6 +32,9 @@ void VisionCapture::InitCapture(int cam,bool start)
     if (m_videoCapture->isOpened()) {
         m_videoCapture->set(CV_CAP_PROP_FRAME_WIDTH,640);
         m_videoCapture->set(CV_CAP_PROP_FRAME_HEIGHT,480);
+        //m_videoCapture->set(CV_CAP_PROP_FRAME_WIDTH,960);
+        //m_videoCapture->set(CV_CAP_PROP_FRAME_HEIGHT,720);
+
         m_videoCapture->set(CV_CAP_PROP_FPS,15);
      if(start)
         StartCapture();

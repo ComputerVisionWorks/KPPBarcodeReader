@@ -11,7 +11,8 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 {
     m_thresh=180;
     m_thresh_inner=180;
-        m_clientTCP=0;
+    m_clientTCP=0;
+    m_decodeinterval=2500;
     m_processAll=false;
 
 #ifdef __linux__
@@ -22,6 +23,8 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
 
     m_gpiomanager->exportPin(m_LedsPin);
     m_gpiomanager->setDirection(m_LedsPin,GPIO::OUTPUT);
+    m_gpiomanager->setValue(m_LedsPin,GPIO::LOW);
+
 #endif
 #endif
 
@@ -29,7 +32,7 @@ VisionProcessing::VisionProcessing(QObject *parent, QZXing *decoder) : QObject(p
     setDecodeEnabled(true);
 
     m_decodeType=OneShotGoodRead;
-    m_decodeinterval=5000;
+    //m_decodeinterval=5000;
 }
 
 

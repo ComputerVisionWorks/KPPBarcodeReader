@@ -8,7 +8,6 @@ QT       += core gui widgets network concurrent
 
 TARGET = KPPBarcodeReader
 TEMPLATE = lib
-CONFIG += plugin
 DEFINES = KPPBARCODEREADER_LIBRARY
 
 
